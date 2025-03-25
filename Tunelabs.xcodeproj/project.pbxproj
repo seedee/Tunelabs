@@ -9,12 +9,16 @@
 /* Begin PBXBuildFile section */
 		FD4C6F7A2D92BCE1009FC47D /* TunelabsApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = FD4C6F792D92BCE1009FC47D /* TunelabsApp.swift */; };
 		FD4C6F7C2D92BCE1009FC47D /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FD4C6F7B2D92BCE1009FC47D /* ContentView.swift */; };
-		FD4C6F7E2D92BCE1009FC47D /* Item.swift in Sources */ = {isa = PBXBuildFile; fileRef = FD4C6F7D2D92BCE1009FC47D /* Item.swift */; };
+		FD4C6F7E2D92BCE1009FC47D /* Song.swift in Sources */ = {isa = PBXBuildFile; fileRef = FD4C6F7D2D92BCE1009FC47D /* Song.swift */; };
 		FD4C6F802D92BCE2009FC47D /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = FD4C6F7F2D92BCE2009FC47D /* Assets.xcassets */; };
 		FD4C6F832D92BCE2009FC47D /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = FD4C6F822D92BCE2009FC47D /* Preview Assets.xcassets */; };
 		FD4C6F8D2D92BCE2009FC47D /* TunelabsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = FD4C6F8C2D92BCE2009FC47D /* TunelabsTests.swift */; };
 		FD4C6F972D92BCE2009FC47D /* TunelabsUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = FD4C6F962D92BCE2009FC47D /* TunelabsUITests.swift */; };
 		FD4C6F992D92BCE2009FC47D /* TunelabsUITestsLaunchTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = FD4C6F982D92BCE2009FC47D /* TunelabsUITestsLaunchTests.swift */; };
+		FD4C6FB32D92CA8A009FC47D /* SlidingTabView in Frameworks */ = {isa = PBXBuildFile; productRef = FD4C6FB22D92CA8A009FC47D /* SlidingTabView */; };
+		FD4C6FB82D92D58E009FC47D /* MainView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FD4C6FB72D92D58E009FC47D /* MainView.swift */; };
+		FD4C6FBA2D92D5D2009FC47D /* AllMusicView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FD4C6FB92D92D5D2009FC47D /* AllMusicView.swift */; };
+		FD4C6FBC2D92D61C009FC47D /* PlayerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FD4C6FBB2D92D61C009FC47D /* PlayerView.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -38,7 +42,7 @@
 		FD4C6F762D92BCE1009FC47D /* Tunelabs.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Tunelabs.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		FD4C6F792D92BCE1009FC47D /* TunelabsApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TunelabsApp.swift; sourceTree = "<group>"; };
 		FD4C6F7B2D92BCE1009FC47D /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
-		FD4C6F7D2D92BCE1009FC47D /* Item.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Item.swift; sourceTree = "<group>"; };
+		FD4C6F7D2D92BCE1009FC47D /* Song.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Song.swift; sourceTree = "<group>"; };
 		FD4C6F7F2D92BCE2009FC47D /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		FD4C6F822D92BCE2009FC47D /* Preview Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = "Preview Assets.xcassets"; sourceTree = "<group>"; };
 		FD4C6F882D92BCE2009FC47D /* TunelabsTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = TunelabsTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -46,6 +50,10 @@
 		FD4C6F922D92BCE2009FC47D /* TunelabsUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = TunelabsUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		FD4C6F962D92BCE2009FC47D /* TunelabsUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TunelabsUITests.swift; sourceTree = "<group>"; };
 		FD4C6F982D92BCE2009FC47D /* TunelabsUITestsLaunchTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TunelabsUITestsLaunchTests.swift; sourceTree = "<group>"; };
+		FD4C6FB62D92D3EC009FC47D /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
+		FD4C6FB72D92D58E009FC47D /* MainView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MainView.swift; sourceTree = "<group>"; };
+		FD4C6FB92D92D5D2009FC47D /* AllMusicView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AllMusicView.swift; sourceTree = "<group>"; };
+		FD4C6FBB2D92D61C009FC47D /* PlayerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlayerView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -53,6 +61,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				FD4C6FB32D92CA8A009FC47D /* SlidingTabView in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -96,9 +105,12 @@
 		FD4C6F782D92BCE1009FC47D /* Tunelabs */ = {
 			isa = PBXGroup;
 			children = (
+				FD4C6FB62D92D3EC009FC47D /* Info.plist */,
+				FD4C6FA82D92C51F009FC47D /* Utilities */,
+				FD4C6FA72D92BEBD009FC47D /* ViewModel */,
+				FD4C6FA62D92BEB7009FC47D /* View */,
+				FD4C6FA52D92BE9C009FC47D /* Model */,
 				FD4C6F792D92BCE1009FC47D /* TunelabsApp.swift */,
-				FD4C6F7B2D92BCE1009FC47D /* ContentView.swift */,
-				FD4C6F7D2D92BCE1009FC47D /* Item.swift */,
 				FD4C6F7F2D92BCE2009FC47D /* Assets.xcassets */,
 				FD4C6F812D92BCE2009FC47D /* Preview Content */,
 			);
@@ -130,6 +142,39 @@
 			path = TunelabsUITests;
 			sourceTree = "<group>";
 		};
+		FD4C6FA52D92BE9C009FC47D /* Model */ = {
+			isa = PBXGroup;
+			children = (
+				FD4C6F7D2D92BCE1009FC47D /* Song.swift */,
+			);
+			path = Model;
+			sourceTree = "<group>";
+		};
+		FD4C6FA62D92BEB7009FC47D /* View */ = {
+			isa = PBXGroup;
+			children = (
+				FD4C6F7B2D92BCE1009FC47D /* ContentView.swift */,
+				FD4C6FB72D92D58E009FC47D /* MainView.swift */,
+				FD4C6FB92D92D5D2009FC47D /* AllMusicView.swift */,
+				FD4C6FBB2D92D61C009FC47D /* PlayerView.swift */,
+			);
+			path = View;
+			sourceTree = "<group>";
+		};
+		FD4C6FA72D92BEBD009FC47D /* ViewModel */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			path = ViewModel;
+			sourceTree = "<group>";
+		};
+		FD4C6FA82D92C51F009FC47D /* Utilities */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			path = Utilities;
+			sourceTree = "<group>";
+		};
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
@@ -146,6 +191,9 @@
 			dependencies = (
 			);
 			name = Tunelabs;
+			packageProductDependencies = (
+				FD4C6FB22D92CA8A009FC47D /* SlidingTabView */,
+			);
 			productName = Tunelabs;
 			productReference = FD4C6F762D92BCE1009FC47D /* Tunelabs.app */;
 			productType = "com.apple.product-type.application";
@@ -218,6 +266,9 @@
 				Base,
 			);
 			mainGroup = FD4C6F6D2D92BCE1009FC47D;
+			packageReferences = (
+				FD4C6FB12D92CA8A009FC47D /* XCRemoteSwiftPackageReference "SlidingTabView" */,
+			);
 			productRefGroup = FD4C6F772D92BCE1009FC47D /* Products */;
 			projectDirPath = "";
 			projectRoot = "";
@@ -261,7 +312,10 @@
 			buildActionMask = 2147483647;
 			files = (
 				FD4C6F7C2D92BCE1009FC47D /* ContentView.swift in Sources */,
-				FD4C6F7E2D92BCE1009FC47D /* Item.swift in Sources */,
+				FD4C6FBA2D92D5D2009FC47D /* AllMusicView.swift in Sources */,
+				FD4C6FB82D92D58E009FC47D /* MainView.swift in Sources */,
+				FD4C6FBC2D92D61C009FC47D /* PlayerView.swift in Sources */,
+				FD4C6F7E2D92BCE1009FC47D /* Song.swift in Sources */,
 				FD4C6F7A2D92BCE1009FC47D /* TunelabsApp.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -429,11 +483,14 @@
 				DEVELOPMENT_TEAM = A983AKNA77;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = Tunelabs/Info.plist;
+				INFOPLIST_KEY_LSSupportsOpeningDocumentsInPlace = YES;
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_UISupportsDocumentBrowser = YES;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -458,11 +515,14 @@
 				DEVELOPMENT_TEAM = A983AKNA77;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = Tunelabs/Info.plist;
+				INFOPLIST_KEY_LSSupportsOpeningDocumentsInPlace = YES;
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_UISupportsDocumentBrowser = YES;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -592,6 +652,25 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		FD4C6FB12D92CA8A009FC47D /* XCRemoteSwiftPackageReference "SlidingTabView" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/QuynhNguyen/SlidingTabView";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 1.0.2;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		FD4C6FB22D92CA8A009FC47D /* SlidingTabView */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = FD4C6FB12D92CA8A009FC47D /* XCRemoteSwiftPackageReference "SlidingTabView" */;
+			productName = SlidingTabView;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = FD4C6F6E2D92BCE1009FC47D /* Project object */;
 }
