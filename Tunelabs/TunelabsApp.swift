@@ -6,13 +6,13 @@
 //
 
 import SwiftUI
-import SwiftData
+//import SwiftData
 
 @main
 struct TunelabsApp: App {
-    var sharedModelContainer: ModelContainer = {
+    /*var sharedModelContainer: ModelContainer = {
         let schema = Schema([
-            Item.self,
+            Song.self,
         ])
         let modelConfiguration = ModelConfiguration(schema: schema, isStoredInMemoryOnly: false)
 
@@ -21,12 +21,44 @@ struct TunelabsApp: App {
         } catch {
             fatalError("Could not create ModelContainer: \(error)")
         }
-    }()
-
+    }()*/
+    
+    init() {
+        createInstructionsFile()
+    }
+    
     var body: some Scene {
         WindowGroup {
-            ContentView()
+            MainView()
         }
-        .modelContainer(sharedModelContainer)
+        //.modelContainer(sharedModelContainer)
+    }
+    
+    private func createInstructionsFile() {
+        // Get Documents directory URL
+        guard let docsDir = FileManager.default.urls(
+            for: .documentDirectory,
+            in: .userDomainMask
+        ).first else {
+            print("Error: Couldn't access Documents directory")
+            return
+        }
+        
+        // Create file URL
+        let instructionsURL = docsDir.appendingPathComponent("Instructions.txt")
+        
+        // Check if file exists
+        if !FileManager.default.fileExists(atPath: instructionsURL.path) {
+            let content = "Put your music in this folder and it will appear in the music library!"
+            
+            do {
+                try content.write(to: instructionsURL, atomically: true, encoding: .utf8)
+                print("Instructions file created at: \(instructionsURL)")
+            } catch {
+                print("Error creating instructions file: \(error.localizedDescription)")
+            }
+        } else {
+            print("Instructions file already exists at: \(instructionsURL)")
+        }
     }
 }
