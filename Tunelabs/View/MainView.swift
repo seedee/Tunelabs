@@ -10,98 +10,22 @@ import SlidingTabView
 
 struct MainView: View {
     
-    @StateObject private var watcher = DirectoryWatcherManager()
-    @State private var tabIndex = 0
-    @State private var audioFiles: [URL] = []
-    @State private var selectedAudioFile: URL?
-    let allowedExtensions = ["mp3", "wav", "m4a"]
+    @StateObject private var viewModel = MainViewModel()
     
     var body: some View {
-        
-        
         VStack {
-            SlidingTabView(selection: $tabIndex, tabs: ["All Music", "Playlists", "Settings"], animation: .easeInOut)
+            SlidingTabView(selection: $viewModel.tabIndex, tabs: ["All Music", "Playlists", "Settings"], animation: .easeInOut, inactiveAccentColor: .secondary)
             
-            if tabIndex == 0 {
-                AllMusicView(audioFiles: audioFiles, selectedAudioFile: $selectedAudioFile)
+            //SlidingT
+            if viewModel.tabIndex == 0 {
+                AllMusicView(selectedAudioFile: $viewModel.selectedAudioFile, audioFiles: viewModel.audioFiles)
             }
             Spacer()
-            PlayerView(selectedAudioFile: $selectedAudioFile)
-        }
-        .onAppear {
-            loadFiles()
-            watcher.startWatching { self.loadFiles() }
-        }
-        .onDisappear {
-            watcher.stopWatching()
-        }
-    }
-    
-    private func loadFiles() {
-        guard let docsDir = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first else { return }
-        
-        do {
-            let files = try FileManager.default.contentsOfDirectory(at: docsDir, includingPropertiesForKeys: nil)
-            audioFiles = files.filter { allowedExtensions.contains($0.pathExtension.lowercased()) }
-        } catch {
-            print("Error loading files: \(error)")
+            PlayerView(selectedAudioFile: $viewModel.selectedAudioFile)
         }
     }
 }
 
 #Preview {
     MainView()
-}
-
-class DirectoryWatcherManager: ObservableObject {
-    private var directoryWatcher: DirectoryWatcher?
-    
-    func startWatching(completion: @escaping () -> Void) {
-        guard let docsURL = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first else { return }
-        
-        directoryWatcher = DirectoryWatcher(watchFolder: docsURL)
-        directoryWatcher?.onChange = { [weak self] in
-            DispatchQueue.main.async {
-                completion()
-            }
-        }
-    }
-    
-    func stopWatching() {
-        directoryWatcher = nil
-    }
-}
-
-class DirectoryWatcher {
-    private var fileDescriptor: CInt = -1
-    private var dispatchSource: DispatchSourceFileSystemObject?
-    var onChange: (() -> Void)?
-    
-    init?(watchFolder: URL) {
-        fileDescriptor = open(watchFolder.path, O_EVTONLY)
-        guard fileDescriptor != -1 else { return nil }
-        
-        dispatchSource = DispatchSource.makeFileSystemObjectSource(
-            fileDescriptor: fileDescriptor,
-            eventMask: .write,
-            queue: .main
-        )
-        
-        dispatchSource?.setEventHandler { [weak self] in
-            self?.onChange?()
-        }
-        
-        dispatchSource?.setCancelHandler { [weak self] in
-            guard let self = self else { return }
-            close(self.fileDescriptor)
-            self.fileDescriptor = -1
-            self.dispatchSource = nil
-        }
-        
-        dispatchSource?.resume()
-    }
-    
-    deinit {
-        dispatchSource?.cancel()
-    }
 }
