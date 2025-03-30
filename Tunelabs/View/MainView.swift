@@ -14,18 +14,35 @@ struct MainView: View {
     
     var body: some View {
         VStack {
-            SlidingTabView(selection: $viewModel.tabIndex, tabs: ["All Music", "Playlists", "Settings"], animation: .easeInOut, inactiveAccentColor: .secondary)
+            SlidingTabView(
+                selection: $viewModel.tabIndex,
+                tabs: ["Library", "Song", "Settings"],
+                animation: .easeInOut,
+                inactiveAccentColor: .primary
+            )
             
-            //SlidingT
-            if viewModel.tabIndex == 0 {
-                AllMusicView(selectedAudioFile: $viewModel.selectedAudioFile, audioFiles: viewModel.audioFiles)
+            Group {
+                switch viewModel.tabIndex {
+                case 0:
+                    LibraryView()
+                case 1:
+                    SongView()
+                case 2:
+                    Text("Settings")
+                        .frame(maxHeight: .infinity)
+                default:
+                    Text("Choose a tab!")
+                        .frame(maxHeight: .infinity)
+                }
             }
             Spacer()
-            PlayerView(selectedAudioFile: $viewModel.selectedAudioFile)
+            PlayerView()
         }
+        .environmentObject(viewModel)
     }
 }
 
 #Preview {
     MainView()
+        .environmentObject(MainViewModel())
 }

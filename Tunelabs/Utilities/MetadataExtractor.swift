@@ -12,7 +12,7 @@ import Combine
 
 class MetadataExtractor {
     
-    static func getCoverArt(for url: URL) -> AnyPublisher<UIImage?, Never> {
+    static func getArtwork(for url: URL) -> AnyPublisher<UIImage?, Never> {
         Future<UIImage?, Never> { promise in
             DispatchQueue.global(qos: .userInitiated).async {
                 let asset = AVAsset(url: url)

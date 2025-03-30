@@ -7,6 +7,9 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		FD3AA9542D9A00EF00701965 /* LibraryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FD3AA9532D9A00EF00701965 /* LibraryView.swift */; };
+		FD3AA9562D9A017100701965 /* SongView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FD3AA9552D9A017100701965 /* SongView.swift */; };
+		FD3AA9582D9A01CB00701965 /* ArtworkView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FD3AA9572D9A01CB00701965 /* ArtworkView.swift */; };
 		FD4C6F7A2D92BCE1009FC47D /* TunelabsApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = FD4C6F792D92BCE1009FC47D /* TunelabsApp.swift */; };
 		FD4C6F7C2D92BCE1009FC47D /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FD4C6F7B2D92BCE1009FC47D /* ContentView.swift */; };
 		FD4C6F7E2D92BCE1009FC47D /* Song.swift in Sources */ = {isa = PBXBuildFile; fileRef = FD4C6F7D2D92BCE1009FC47D /* Song.swift */; };
@@ -17,14 +20,12 @@
 		FD4C6F992D92BCE2009FC47D /* TunelabsUITestsLaunchTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = FD4C6F982D92BCE2009FC47D /* TunelabsUITestsLaunchTests.swift */; };
 		FD4C6FB32D92CA8A009FC47D /* SlidingTabView in Frameworks */ = {isa = PBXBuildFile; productRef = FD4C6FB22D92CA8A009FC47D /* SlidingTabView */; };
 		FD4C6FB82D92D58E009FC47D /* MainView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FD4C6FB72D92D58E009FC47D /* MainView.swift */; };
-		FD4C6FBA2D92D5D2009FC47D /* AllMusicView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FD4C6FB92D92D5D2009FC47D /* AllMusicView.swift */; };
 		FD4C6FBC2D92D61C009FC47D /* PlayerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FD4C6FBB2D92D61C009FC47D /* PlayerView.swift */; };
 		FD7B8EFC2D982FE00082B394 /* DirectoryWatcher.swift in Sources */ = {isa = PBXBuildFile; fileRef = FD7B8EFB2D982FE00082B394 /* DirectoryWatcher.swift */; };
 		FD7B8EFE2D982FFF0082B394 /* DirectoryWatcherManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = FD7B8EFD2D982FFF0082B394 /* DirectoryWatcherManager.swift */; };
 		FD7B8F012D98304E0082B394 /* MainViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = FD7B8F002D98304E0082B394 /* MainViewModel.swift */; };
 		FD7B8F032D98317C0082B394 /* PlayerViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = FD7B8F022D98317C0082B394 /* PlayerViewModel.swift */; };
 		FD7B8F072D9832800082B394 /* MetadataExtractor.swift in Sources */ = {isa = PBXBuildFile; fileRef = FD7B8F062D9832800082B394 /* MetadataExtractor.swift */; };
-		FD7B8F092D9832B70082B394 /* AllMusicViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = FD7B8F082D9832B70082B394 /* AllMusicViewModel.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -45,6 +46,9 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		FD3AA9532D9A00EF00701965 /* LibraryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LibraryView.swift; sourceTree = "<group>"; };
+		FD3AA9552D9A017100701965 /* SongView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SongView.swift; sourceTree = "<group>"; };
+		FD3AA9572D9A01CB00701965 /* ArtworkView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ArtworkView.swift; sourceTree = "<group>"; };
 		FD4C6F762D92BCE1009FC47D /* Tunelabs.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Tunelabs.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		FD4C6F792D92BCE1009FC47D /* TunelabsApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TunelabsApp.swift; sourceTree = "<group>"; };
 		FD4C6F7B2D92BCE1009FC47D /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
@@ -58,14 +62,12 @@
 		FD4C6F982D92BCE2009FC47D /* TunelabsUITestsLaunchTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TunelabsUITestsLaunchTests.swift; sourceTree = "<group>"; };
 		FD4C6FB62D92D3EC009FC47D /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		FD4C6FB72D92D58E009FC47D /* MainView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MainView.swift; sourceTree = "<group>"; };
-		FD4C6FB92D92D5D2009FC47D /* AllMusicView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AllMusicView.swift; sourceTree = "<group>"; };
 		FD4C6FBB2D92D61C009FC47D /* PlayerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlayerView.swift; sourceTree = "<group>"; };
 		FD7B8EFB2D982FE00082B394 /* DirectoryWatcher.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DirectoryWatcher.swift; sourceTree = "<group>"; };
 		FD7B8EFD2D982FFF0082B394 /* DirectoryWatcherManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DirectoryWatcherManager.swift; sourceTree = "<group>"; };
 		FD7B8F002D98304E0082B394 /* MainViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MainViewModel.swift; sourceTree = "<group>"; };
 		FD7B8F022D98317C0082B394 /* PlayerViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlayerViewModel.swift; sourceTree = "<group>"; };
 		FD7B8F062D9832800082B394 /* MetadataExtractor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MetadataExtractor.swift; sourceTree = "<group>"; };
-		FD7B8F082D9832B70082B394 /* AllMusicViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AllMusicViewModel.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -167,8 +169,10 @@
 			children = (
 				FD4C6F7B2D92BCE1009FC47D /* ContentView.swift */,
 				FD4C6FB72D92D58E009FC47D /* MainView.swift */,
-				FD4C6FB92D92D5D2009FC47D /* AllMusicView.swift */,
 				FD4C6FBB2D92D61C009FC47D /* PlayerView.swift */,
+				FD3AA9532D9A00EF00701965 /* LibraryView.swift */,
+				FD3AA9552D9A017100701965 /* SongView.swift */,
+				FD3AA9572D9A01CB00701965 /* ArtworkView.swift */,
 			);
 			path = View;
 			sourceTree = "<group>";
@@ -188,7 +192,6 @@
 			children = (
 				FD7B8F002D98304E0082B394 /* MainViewModel.swift */,
 				FD7B8F022D98317C0082B394 /* PlayerViewModel.swift */,
-				FD7B8F082D9832B70082B394 /* AllMusicViewModel.swift */,
 			);
 			path = ViewModel;
 			sourceTree = "<group>";
@@ -333,12 +336,13 @@
 				FD7B8F072D9832800082B394 /* MetadataExtractor.swift in Sources */,
 				FD7B8F032D98317C0082B394 /* PlayerViewModel.swift in Sources */,
 				FD4C6F7C2D92BCE1009FC47D /* ContentView.swift in Sources */,
-				FD4C6FBA2D92D5D2009FC47D /* AllMusicView.swift in Sources */,
+				FD3AA9542D9A00EF00701965 /* LibraryView.swift in Sources */,
 				FD4C6FB82D92D58E009FC47D /* MainView.swift in Sources */,
 				FD4C6FBC2D92D61C009FC47D /* PlayerView.swift in Sources */,
 				FD4C6F7E2D92BCE1009FC47D /* Song.swift in Sources */,
-				FD7B8F092D9832B70082B394 /* AllMusicViewModel.swift in Sources */,
+				FD3AA9582D9A01CB00701965 /* ArtworkView.swift in Sources */,
 				FD7B8EFE2D982FFF0082B394 /* DirectoryWatcherManager.swift in Sources */,
+				FD3AA9562D9A017100701965 /* SongView.swift in Sources */,
 				FD4C6F7A2D92BCE1009FC47D /* TunelabsApp.swift in Sources */,
 				FD7B8F012D98304E0082B394 /* MainViewModel.swift in Sources */,
 			);

@@ -9,17 +9,17 @@ import SwiftUI
 import AVKit
 
 struct PlayerView: View {
-    
+
+    @EnvironmentObject private var mainViewModel: MainViewModel
     @StateObject private var viewModel = PlayerViewModel()
-    @Binding var selectedAudioFile: URL?
     
     var body: some View {
         VStack {
             VStack {
                 Divider()
                 
-                Text(selectedAudioFile?.lastPathComponent ?? "No file selected")
-                    .font(.footnote)
+                Text(mainViewModel.selectedAudioFile?.lastPathComponent ?? "No song selected")
+                    .font(.body)
                     .padding([.top, .trailing, .leading], 20)
                 
                 Slider(value: Binding(
@@ -30,6 +30,7 @@ struct PlayerView: View {
                 
                 HStack {
                     Text(viewModel.timeString(time: viewModel.currentTime))
+                        .frame(minWidth: 32)
                     Spacer()
                     Button {
                         viewModel.isPlaying ? viewModel.stopAudio() : viewModel.playAudio()
@@ -41,13 +42,18 @@ struct PlayerView: View {
                     }
                     Spacer()
                     Text(viewModel.timeString(time: viewModel.totalTime))
+                        .frame(minWidth: 32)
                 }
                 .font(.caption)
                 .padding([.trailing, .leading], 20)
             }
         }
-        .onChange(of: selectedAudioFile) { _, newFile in
+        .onChange(of: mainViewModel.selectedAudioFile) { _, newFile in
             viewModel.handleNewFile(newFile)
         }
     }
 }
+
+/*#Preview {
+    PlayerView()
+}*/

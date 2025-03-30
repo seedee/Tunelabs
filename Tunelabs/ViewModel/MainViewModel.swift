@@ -5,16 +5,18 @@
 //  Created by Daniil Lebedev on 29/03/2025.
 //
 
-import Foundation
+import SwiftUI
 import Combine
 
 class MainViewModel: ObservableObject {
     
     @Published var selectedAudioFile: URL?
     @Published var audioFiles: [URL] = []
+    @Published private(set) var audioArtworkCache: [URL: UIImage] = [:]
     @Published var tabIndex: Int = 0
-    let allowedExtensions = ["mp3", "wav", "m4a"]
     private let watcherManager = DirectoryWatcherManager()
+    private var cancellables = Set<AnyCancellable>()
+    let allowedExtensions = ["mp3", "wav", "m4a"]
     
     init() {
         watcherManager.startWatching { [weak self] in
@@ -36,5 +38,16 @@ class MainViewModel: ObservableObject {
         } catch {
             print("Error loading files: \(error)")
         }
+    }
+    
+    func loadArtwork(for url: URL) {
+        guard !audioArtworkCache.keys.contains(url) else { return }
+        
+        MetadataExtractor.getArtwork(for: url)
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] image in
+                self?.audioArtworkCache[url] = image
+            }
+            .store(in: &cancellables)
     }
 }
