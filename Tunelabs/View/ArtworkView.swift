@@ -12,11 +12,11 @@ struct ArtworkView: View {
     let song: Song?
         
     var body: some View {
-        if let song = song, let artworkData = song.artworkData, let image = UIImage(data: artworkData) {
+        if let song = song, let artwork = song.artwork, let image = UIImage(data: artwork) {
             Image(uiImage: image)
                 .resizable()
                 .shadow(color: .secondary.opacity(0.2), radius: 2, x: 1, y: 1)
-                .aspectRatio(1, contentMode: .fill)
+                .aspectRatio(1, contentMode: .fit)
         } else {
             defaultArtworkView
         }

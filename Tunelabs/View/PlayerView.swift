@@ -18,9 +18,13 @@ struct PlayerView: View {
             VStack {
                 Divider()
                 
-                Text(mainViewModel.selectedSong?.fileURL.lastPathComponent ?? "No song selected")
-                    .font(.body)
-                    .padding([.top, .trailing, .leading], 20)
+                Text(
+                    mainViewModel.selectedSong?.title ??
+                    mainViewModel.selectedSong?.fileURL.lastPathComponent ??
+                     "No song selected"
+                )
+                .font(.body)
+                .padding([.top, .trailing, .leading], 20)
                 
                 Slider(value: Binding(
                     get: { viewModel.currentTime },
@@ -57,3 +61,4 @@ struct PlayerView: View {
 /*#Preview {
     PlayerView()
 }*/
+

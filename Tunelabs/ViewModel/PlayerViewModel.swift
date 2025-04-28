@@ -16,6 +16,7 @@ class PlayerViewModel: ObservableObject {
     @Published var currentTime: TimeInterval = 0.0
     private var player: AVAudioPlayer?
     private var timer: AnyCancellable?
+    private var stopObserver: Any?
     
     deinit {
         timer?.cancel()

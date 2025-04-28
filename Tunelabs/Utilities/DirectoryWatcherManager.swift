@@ -7,17 +7,17 @@
 
 import Foundation
 
-class DirectoryWatcherManager: ObservableObject {
+final class DirectoryWatcherManager {
     private var directoryWatcher: DirectoryWatcher?
     
+    // Keep [weak self] to prevent retain cycles
     func startWatching(completion: @escaping () -> Void) {
         guard let docsURL = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first else { return }
         
         directoryWatcher = DirectoryWatcher(watchFolder: docsURL)
         directoryWatcher?.onChange = { [weak self] in
-            DispatchQueue.main.async {
-                completion()
-            }
+            guard self != nil else { return } // Maintain weak reference
+            DispatchQueue.main.async(execute: completion)
         }
     }
     

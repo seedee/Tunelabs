@@ -32,14 +32,13 @@ struct MainView: View {
                     Text("Settings")
                         .frame(maxHeight: .infinity)
                 default:
-                    Text("Choose a tab!")
+                    Text("Select a tab!")
                         .frame(maxHeight: .infinity)
                 }
             }
             Spacer()
             PlayerView()
         }
-        .environmentObject(viewModel)
     }
 }
 
