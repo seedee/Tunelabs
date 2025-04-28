@@ -6,27 +6,36 @@
 //
 
 import SwiftUI
-import Combine
+import SwiftData
 
 struct LibraryView: View {
     
     @EnvironmentObject private var mainViewModel: MainViewModel
+    @Environment(\.modelContext) private var modelContext
+    @Query private var songs: [Song]
     
     var body: some View {
         VStack {
-            List(mainViewModel.audioFiles, id: \.self) { fileURL in
+            List(songs) { song in
                 HStack(spacing: 16) {
-                    ArtworkView(fileURL: fileURL)
+                    ArtworkView(song: song)
                         .frame(width: 48, height: 48)
                         .clipShape(RoundedRectangle(cornerRadius: 4))
-                    Text(fileURL.lastPathComponent)
+                    
+                    VStack(alignment: .leading) {
+                        Text(song.title ?? song.fileURL.lastPathComponent)
+                            .font(.body)
+                        if let artist = song.artist {
+                            Text(artist)
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+                        }
+                    }
+                    
                     Spacer()
                 }
                 .onTapGesture {
-                    mainViewModel.selectedAudioFile = fileURL
-                }
-                .onAppear {
-                    mainViewModel.loadArtwork(for: fileURL)
+                    mainViewModel.selectedSong = song
                 }
             }
             .listStyle(.plain)

@@ -6,7 +6,17 @@
 //
 
 import SwiftUI
-//import SwiftData
+import SwiftData
+
+//Helper root view to ensure proper dependency injection timing
+struct RootView: View {
+    @Environment(\.modelContext) private var modelContext
+    
+    var body: some View {
+        MainView()
+            .environmentObject(MainViewModel(modelContext: modelContext))
+    }
+}
 
 @main
 struct TunelabsApp: App {
@@ -29,9 +39,10 @@ struct TunelabsApp: App {
     
     var body: some Scene {
         WindowGroup {
-            MainView()
+            RootView()
         }
         //.modelContainer(sharedModelContainer)
+        .modelContainer(for: Song.self)
     }
     
     private func createInstructionsFile() {

@@ -6,11 +6,12 @@
 //
 
 import SwiftUI
+import SwiftData
 import SlidingTabView
 
 struct MainView: View {
     
-    @StateObject private var viewModel = MainViewModel()
+    @EnvironmentObject private var viewModel: MainViewModel
     
     var body: some View {
         VStack {
@@ -43,6 +44,8 @@ struct MainView: View {
 }
 
 #Preview {
-    MainView()
-        .environmentObject(MainViewModel())
+    let config = ModelConfiguration(isStoredInMemoryOnly: true)
+    let container = try! ModelContainer(for: Song.self, configurations: config)
+    return MainView()
+        .environmentObject(MainViewModel(modelContext: container.mainContext))
 }

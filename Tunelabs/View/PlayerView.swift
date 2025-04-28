@@ -18,7 +18,7 @@ struct PlayerView: View {
             VStack {
                 Divider()
                 
-                Text(mainViewModel.selectedAudioFile?.lastPathComponent ?? "No song selected")
+                Text(mainViewModel.selectedSong?.fileURL.lastPathComponent ?? "No song selected")
                     .font(.body)
                     .padding([.top, .trailing, .leading], 20)
                 
@@ -48,8 +48,8 @@ struct PlayerView: View {
                 .padding([.trailing, .leading], 20)
             }
         }
-        .onChange(of: mainViewModel.selectedAudioFile) { _, newFile in
-            viewModel.handleNewFile(newFile)
+        .onChange(of: mainViewModel.selectedSong) { _, newSong in
+            viewModel.handleNewFile(newSong?.fileURL)
         }
     }
 }

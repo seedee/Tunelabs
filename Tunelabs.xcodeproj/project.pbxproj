@@ -11,7 +11,6 @@
 		FD3AA9562D9A017100701965 /* SongView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FD3AA9552D9A017100701965 /* SongView.swift */; };
 		FD3AA9582D9A01CB00701965 /* ArtworkView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FD3AA9572D9A01CB00701965 /* ArtworkView.swift */; };
 		FD4C6F7A2D92BCE1009FC47D /* TunelabsApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = FD4C6F792D92BCE1009FC47D /* TunelabsApp.swift */; };
-		FD4C6F7C2D92BCE1009FC47D /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FD4C6F7B2D92BCE1009FC47D /* ContentView.swift */; };
 		FD4C6F7E2D92BCE1009FC47D /* Song.swift in Sources */ = {isa = PBXBuildFile; fileRef = FD4C6F7D2D92BCE1009FC47D /* Song.swift */; };
 		FD4C6F802D92BCE2009FC47D /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = FD4C6F7F2D92BCE2009FC47D /* Assets.xcassets */; };
 		FD4C6F832D92BCE2009FC47D /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = FD4C6F822D92BCE2009FC47D /* Preview Assets.xcassets */; };
@@ -51,7 +50,6 @@
 		FD3AA9572D9A01CB00701965 /* ArtworkView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ArtworkView.swift; sourceTree = "<group>"; };
 		FD4C6F762D92BCE1009FC47D /* Tunelabs.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Tunelabs.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		FD4C6F792D92BCE1009FC47D /* TunelabsApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TunelabsApp.swift; sourceTree = "<group>"; };
-		FD4C6F7B2D92BCE1009FC47D /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
 		FD4C6F7D2D92BCE1009FC47D /* Song.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Song.swift; sourceTree = "<group>"; };
 		FD4C6F7F2D92BCE2009FC47D /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		FD4C6F822D92BCE2009FC47D /* Preview Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = "Preview Assets.xcassets"; sourceTree = "<group>"; };
@@ -167,7 +165,6 @@
 		FD4C6FA62D92BEB7009FC47D /* View */ = {
 			isa = PBXGroup;
 			children = (
-				FD4C6F7B2D92BCE1009FC47D /* ContentView.swift */,
 				FD4C6FB72D92D58E009FC47D /* MainView.swift */,
 				FD4C6FBB2D92D61C009FC47D /* PlayerView.swift */,
 				FD3AA9532D9A00EF00701965 /* LibraryView.swift */,
@@ -335,7 +332,6 @@
 				FD7B8EFC2D982FE00082B394 /* DirectoryWatcher.swift in Sources */,
 				FD7B8F072D9832800082B394 /* MetadataExtractor.swift in Sources */,
 				FD7B8F032D98317C0082B394 /* PlayerViewModel.swift in Sources */,
-				FD4C6F7C2D92BCE1009FC47D /* ContentView.swift in Sources */,
 				FD3AA9542D9A00EF00701965 /* LibraryView.swift in Sources */,
 				FD4C6FB82D92D58E009FC47D /* MainView.swift in Sources */,
 				FD4C6FBC2D92D61C009FC47D /* PlayerView.swift in Sources */,
