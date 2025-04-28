@@ -9,15 +9,21 @@ import Foundation
 
 final class DirectoryWatcherManager {
     private var directoryWatcher: DirectoryWatcher?
+    private var debounceTimer: Timer?
     
-    // Keep [weak self] to prevent retain cycles
     func startWatching(completion: @escaping () -> Void) {
         guard let docsURL = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first else { return }
         
         directoryWatcher = DirectoryWatcher(watchFolder: docsURL)
         directoryWatcher?.onChange = { [weak self] in
-            guard self != nil else { return } // Maintain weak reference
-            DispatchQueue.main.async(execute: completion)
+            // Debounce to prevent multiple rapid calls
+            // Only one file processing call within a short time frame
+            // Prevents multiple simultaneous directory change events
+            self?.debounceTimer?.invalidate()
+            self?.debounceTimer = Timer.scheduledTimer(withTimeInterval: 0.5, repeats: false) { _ in
+                guard self != nil else { return }
+                DispatchQueue.main.async(execute: completion)
+            }
         }
     }
     

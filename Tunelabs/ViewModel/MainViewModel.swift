@@ -37,16 +37,16 @@ class MainViewModel: ObservableObject {
         modelContext.rollback()
     }
     
-    func updateSongURL(from oldURL: URL, to newURL: URL) {
-        guard let song = songs.first(where: { $0.fileURL == oldURL }) else { return }
-        song.fileURL = newURL
-        saveContext()
-    }
-    
     private func startDirectoryWatcher() {
         watcherManager.startWatching { [weak self] in
             self?.processFiles()
         }
+    }
+    
+    func updateSongURL(from oldURL: URL, to newURL: URL) {
+        guard let song = songs.first(where: { $0.fileURL == oldURL }) else { return }
+        song.fileURL = newURL
+        saveContext()
     }
     
     private func processFiles() {
@@ -57,10 +57,26 @@ class MainViewModel: ObservableObject {
                 let files = try FileManager.default.contentsOfDirectory(at: docsDir, includingPropertiesForKeys: nil)
                 let audioFiles = files.filter { self.allowedExtensions.contains($0.pathExtension.lowercased()) }
                 
-                // Get existing songs
+                // Fetch all existing songs
                 let existingSongs = try self.modelContext.fetch(FetchDescriptor<Song>())
                 
-                // Add new files
+                // Identify songs to remove (files no longer in documents)
+                let songsToRemove = existingSongs.filter { song in
+                    !audioFiles.contains(song.fileURL)
+                }
+                
+                // Handle selected song removal
+                if let selectedSong = selectedSong, songsToRemove.contains(where: { $0.fileURL == selectedSong.fileURL }) {
+                    // If selected song is removed, clear selection
+                    self.selectedSong = nil
+                }
+                
+                // Remove songs that no longer exist in documents
+                for song in songsToRemove {
+                    self.modelContext.delete(song)
+                }
+                
+                // Add new files not already in library
                 for fileURL in audioFiles where !existingSongs.contains(where: { $0.fileURL == fileURL }) {
                     let metadata = await MetadataHandler.readMetadata(from: fileURL)
                     let song = Song(
@@ -71,11 +87,6 @@ class MainViewModel: ObservableObject {
                         duration: metadata.duration
                     )
                     self.modelContext.insert(song)
-                }
-                
-                // Remove deleted files
-                for song in existingSongs where !audioFiles.contains(song.fileURL) {
-                    self.modelContext.delete(song)
                 }
                 
                 try self.modelContext.save()
