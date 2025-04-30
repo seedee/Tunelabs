@@ -26,6 +26,9 @@
 		FD7B8EFE2D982FFF0082B394 /* DirectoryWatcherManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = FD7B8EFD2D982FFF0082B394 /* DirectoryWatcherManager.swift */; };
 		FD7B8F012D98304E0082B394 /* MainViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = FD7B8F002D98304E0082B394 /* MainViewModel.swift */; };
 		FD7B8F032D98317C0082B394 /* PlayerViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = FD7B8F022D98317C0082B394 /* PlayerViewModel.swift */; };
+		FD806B8F2DC26B9400FD8E69 /* AudioEditor.swift in Sources */ = {isa = PBXBuildFile; fileRef = FD806B8E2DC26B9400FD8E69 /* AudioEditor.swift */; };
+		FD806B912DC26C1800FD8E69 /* AudioEditorViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = FD806B902DC26C1800FD8E69 /* AudioEditorViewModel.swift */; };
+		FD806B932DC26C3C00FD8E69 /* EditAudioView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FD806B922DC26C3C00FD8E69 /* EditAudioView.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -68,6 +71,9 @@
 		FD7B8EFD2D982FFF0082B394 /* DirectoryWatcherManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DirectoryWatcherManager.swift; sourceTree = "<group>"; };
 		FD7B8F002D98304E0082B394 /* MainViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MainViewModel.swift; sourceTree = "<group>"; };
 		FD7B8F022D98317C0082B394 /* PlayerViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlayerViewModel.swift; sourceTree = "<group>"; };
+		FD806B8E2DC26B9400FD8E69 /* AudioEditor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AudioEditor.swift; sourceTree = "<group>"; };
+		FD806B902DC26C1800FD8E69 /* AudioEditorViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AudioEditorViewModel.swift; sourceTree = "<group>"; };
+		FD806B922DC26C3C00FD8E69 /* EditAudioView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EditAudioView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -173,6 +179,7 @@
 				FD3AA9552D9A017100701965 /* SongView.swift */,
 				FD3AA9572D9A01CB00701965 /* ArtworkView.swift */,
 				FD205E312DC02BEC0059F1E1 /* EditMetadataView.swift */,
+				FD806B922DC26C3C00FD8E69 /* EditAudioView.swift */,
 			);
 			path = View;
 			sourceTree = "<group>";
@@ -183,6 +190,7 @@
 				FD7B8EFB2D982FE00082B394 /* DirectoryWatcher.swift */,
 				FD7B8EFD2D982FFF0082B394 /* DirectoryWatcherManager.swift */,
 				FD205E2F2DC02AEB0059F1E1 /* MetadataHandler.swift */,
+				FD806B8E2DC26B9400FD8E69 /* AudioEditor.swift */,
 			);
 			path = Utilities;
 			sourceTree = "<group>";
@@ -192,6 +200,7 @@
 			children = (
 				FD7B8F002D98304E0082B394 /* MainViewModel.swift */,
 				FD7B8F022D98317C0082B394 /* PlayerViewModel.swift */,
+				FD806B902DC26C1800FD8E69 /* AudioEditorViewModel.swift */,
 			);
 			path = ViewModel;
 			sourceTree = "<group>";
@@ -333,8 +342,11 @@
 			buildActionMask = 2147483647;
 			files = (
 				FD7B8EFC2D982FE00082B394 /* DirectoryWatcher.swift in Sources */,
+				FD806B932DC26C3C00FD8E69 /* EditAudioView.swift in Sources */,
+				FD806B912DC26C1800FD8E69 /* AudioEditorViewModel.swift in Sources */,
 				FD7B8F032D98317C0082B394 /* PlayerViewModel.swift in Sources */,
 				FD3AA9542D9A00EF00701965 /* LibraryView.swift in Sources */,
+				FD806B8F2DC26B9400FD8E69 /* AudioEditor.swift in Sources */,
 				FD4C6FB82D92D58E009FC47D /* MainView.swift in Sources */,
 				FD205E322DC02BEC0059F1E1 /* EditMetadataView.swift in Sources */,
 				FD4C6FBC2D92D61C009FC47D /* PlayerView.swift in Sources */,

@@ -17,7 +17,7 @@ class MainViewModel: ObservableObject {
     @Query private var songs: [Song]
     private let modelContext: ModelContext
     private let watcherManager = DirectoryWatcherManager()
-    let allowedExtensions = ["mp3", "wav", "m4a"]
+    let allowedExtensions = ["mp3", "wav", "m4a", "aiff", "aif"]
     
     init(modelContext: ModelContext) {
         self.modelContext = modelContext
@@ -49,7 +49,7 @@ class MainViewModel: ObservableObject {
         saveContext()
     }
     
-    private func processFiles() {
+    func processFiles() {
         Task {
             guard let docsDir = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first else { return }
             
@@ -93,6 +93,34 @@ class MainViewModel: ObservableObject {
             } catch {
                 print("File processing error: \(error)")
             }
+        }
+    }
+    
+    // MARK: - Song Navigation
+    
+    func nextSong() {
+        guard !songs.isEmpty else { return }
+        
+        if let currentSong = selectedSong, let currentIndex = songs.firstIndex(where: { $0.id == currentSong.id }) {
+            // If we have a currently selected song, find its index and select the next one
+            let nextIndex = (currentIndex + 1) % songs.count
+            selectedSong = songs[nextIndex]
+        } else {
+            // If no song is selected or we can't find the current song, select the first one
+            selectedSong = songs.first
+        }
+    }
+    
+    func previousSong() {
+        guard !songs.isEmpty else { return }
+        
+        if let currentSong = selectedSong, let currentIndex = songs.firstIndex(where: { $0.id == currentSong.id }) {
+            // If we have a currently selected song, find its index and select the previous one
+            let previousIndex = (currentIndex - 1 + songs.count) % songs.count
+            selectedSong = songs[previousIndex]
+        } else {
+            // If no song is selected or we can't find the current song, select the first one
+            selectedSong = songs.first
         }
     }
 }

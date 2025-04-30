@@ -143,7 +143,18 @@ class MetadataHandler {
             )
         }
         
-        try replaceOriginalFile(at: url, with: outputURL, newExtension: fileExtension)
+        // Get the URL for the result
+        let updatedURL = try replaceOriginalFile(at: url, with: outputURL, newExtension: fileExtension)
+        
+        // If the URL has changed, we need to update references in the app
+        // This will be handled by the calling code with the returned URL
+        if updatedURL != url {
+            NotificationCenter.default.post(
+                name: Notification.Name("MetadataFileURLChanged"),
+                object: nil,
+                userInfo: ["oldURL": url, "newURL": updatedURL]
+            )
+        }
     }
     
     private static func determineExportSettings(for fileExtension: String) throws -> (AVFileType, String, String) {
@@ -176,29 +187,30 @@ class MetadataHandler {
         }
     }
     
-    private static func replaceOriginalFile(at originalURL: URL, with newURL: URL, newExtension: String) throws {
+    private static func replaceOriginalFile(at originalURL: URL, with newURL: URL, newExtension: String) throws -> URL {
         let fileManager = FileManager.default
         let originalPath = originalURL.path
         
-        // 1. Remove original file
-        if fileManager.fileExists(atPath: originalPath) {
-            try fileManager.removeItem(at: originalURL)
-        }
-        
-        // 2. Calculate new path if extension changed
+        // 1. Calculate new path if extension changed
         let newFileName = originalURL.deletingPathExtension().lastPathComponent
         let targetURL = originalURL.deletingLastPathComponent()
             .appendingPathComponent(newFileName)
             .appendingPathExtension(newExtension)
         
-        // 3. Move exported file
+        // 2. Remove original file if it exists
+        if fileManager.fileExists(atPath: originalPath) {
+            try fileManager.removeItem(at: originalURL)
+        }
+        
+        // 3. If target exists (but is different from original), remove it
+        if targetURL != originalURL && fileManager.fileExists(atPath: targetURL.path) {
+            try fileManager.removeItem(at: targetURL)
+        }
+        
+        // 4. Move exported file
         try fileManager.moveItem(at: newURL, to: targetURL)
         
-        // 4. Update file URL in SwiftData if extension changed
-        if originalURL != targetURL {
-            // Update your Song model's fileURL here
-            // You'll need to pass a reference to your ViewModel
-            // viewModel.updateSongURL(from: originalURL, to: targetURL)
-        }
+        // 5. Return the final URL - could be different if extension changed
+        return targetURL
     }
 }

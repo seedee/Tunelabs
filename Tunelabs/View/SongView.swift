@@ -6,17 +6,20 @@
 //
 
 import SwiftUI
+import SwiftData
 
 struct SongView: View {
     
     @EnvironmentObject private var mainViewModel: MainViewModel
     @State private var showMetadataEditor = false
+    @State private var showAudioEditor = false
     
     var body: some View {
         VStack {
             HStack {
                 Spacer()
-                Button("Edit Audio", systemImage: "folder") {
+                Button("Edit Audio", systemImage: "waveform") {
+                    showAudioEditor = true
                 }
                 Spacer()
                 Button("Edit Metadata", systemImage: "pencil") {
@@ -37,9 +40,18 @@ struct SongView: View {
                     .environmentObject(mainViewModel)
             }
         }
+        .sheet(isPresented: $showAudioEditor) {
+            if let song = mainViewModel.selectedSong {
+                EditAudioView(song: song)
+                    .environmentObject(mainViewModel)
+            }
+        }
     }
 }
 
-/*#Preview {
-    SongView()
-}*/
+#Preview {
+    let container = try! ModelContainer(for: Song.self, configurations: ModelConfiguration(isStoredInMemoryOnly: true))
+    let viewModel = MainViewModel(modelContext: container.mainContext)
+    return SongView()
+        .environmentObject(viewModel)
+}
