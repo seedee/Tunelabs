@@ -11,7 +11,15 @@ import SlidingTabView
 
 struct MainView: View {
     
-    @EnvironmentObject private var viewModel: MainViewModel
+    @Environment(\.modelContext) private var modelContext
+    @StateObject private var viewModel: MainViewModel
+    
+    init() {
+        // Create the view model with the model context from the environment
+        let config = ModelConfiguration(isStoredInMemoryOnly: false)
+        let container = try! ModelContainer(for: Song.self, configurations: config)
+        _viewModel = StateObject(wrappedValue: MainViewModel(modelContext: container.mainContext))
+    }
     
     var body: some View {
         VStack {
@@ -39,12 +47,10 @@ struct MainView: View {
             Spacer()
             PlayerView()
         }
+        .environmentObject(viewModel)
     }
 }
 
 #Preview {
-    let config = ModelConfiguration(isStoredInMemoryOnly: true)
-    let container = try! ModelContainer(for: Song.self, configurations: config)
-    return MainView()
-        .environmentObject(MainViewModel(modelContext: container.mainContext))
+    MainView()
 }

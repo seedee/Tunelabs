@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import SwiftData
 
 struct EditAudioView: View {
     @Environment(\.dismiss) private var dismiss
@@ -14,6 +15,7 @@ struct EditAudioView: View {
     @State private var showConfirmDialog = false
     @State private var showingAlert = false
     @State private var alertMessage = ""
+    @State private var alertTitle = "Error"
     
     let song: Song
     
@@ -21,16 +23,17 @@ struct EditAudioView: View {
         NavigationStack {
             Form {
                 effectsSection
+                playbackSection
                 infoSection
             }
             .navigationTitle("Edit Audio")
             .toolbar { toolbarItems }
-            .confirmationDialog("Apply Audio Effects", isPresented: $showConfirmDialog) {
+            .confirmationDialog("Save Audio with Effects", isPresented: $showConfirmDialog) {
                 confirmationButtons
             } message: {
                 Text("This will create a new version of the audio file with the applied effects.")
             }
-            .alert("Processing Error", isPresented: $showingAlert) {
+            .alert(alertTitle, isPresented: $showingAlert) {
                 Button("OK") { }
             } message: {
                 Text(alertMessage)
@@ -45,6 +48,22 @@ struct EditAudioView: View {
                         .shadow(radius: 2)
                 }
             }
+            .onAppear {
+                loadAudio()
+            }
+            .onDisappear {
+                viewModel.previewPlayer.stop()
+            }
+        }
+    }
+    
+    private func loadAudio() {
+        do {
+            try viewModel.loadAudio(url: song.fileURL)
+        } catch {
+            alertTitle = "Audio Load Error"
+            alertMessage = "Failed to load audio: \(error.localizedDescription)"
+            showingAlert = true
         }
     }
     
@@ -66,7 +85,7 @@ struct EditAudioView: View {
                     Spacer()
                     Text(String(format: "%.2fx", viewModel.speed))
                 }
-                Slider(value: $viewModel.speed, in: 0.5...2.0, step: 0.05)
+                Slider(value: $viewModel.speed, in: 0.5...2.0, step: 0.1)
             }
             .padding(.vertical, 4)
             
@@ -77,9 +96,42 @@ struct EditAudioView: View {
         }
     }
     
+    private var playbackSection: some View {
+        Section("Preview") {
+            HStack {
+                Button {
+                    if viewModel.previewPlayer.isPlaying {
+                        viewModel.previewPlayer.pause()
+                    } else {
+                        viewModel.previewPlayer.play()
+                    }
+                } label: {
+                    Image(systemName: viewModel.previewPlayer.isPlaying ? "pause.fill" : "play.fill")
+                        .font(.title2)
+                        .padding(.horizontal, 8)
+                }
+                
+                Button {
+                    viewModel.previewPlayer.stop()
+                } label: {
+                    Image(systemName: "stop.fill")
+                        .font(.title2)
+                        .padding(.horizontal, 8)
+                }
+                
+                Spacer()
+                
+                Text(formatTime(viewModel.previewPlayer.currentTime))
+                Text(" / ")
+                Text(formatTime(viewModel.previewPlayer.duration))
+            }
+            .padding(.vertical, 8)
+        }
+    }
+    
     private var infoSection: some View {
         Section("Info") {
-            Text("Changes will create a new audio file with the effects applied. The original file will remain unchanged.")
+            Text("Adjust effects in real-time without changing the original file. Use \"Save As\" to create a new audio file with the effects applied.")
                 .font(.caption)
                 .foregroundStyle(.secondary)
         }
@@ -93,9 +145,10 @@ struct EditAudioView: View {
                 }
             }
             ToolbarItem(placement: .confirmationAction) {
-                Button("Apply") {
+                Button("Save As") {
                     showConfirmDialog = true
                 }
+                .disabled(viewModel.isProcessing)
             }
         }
     }
@@ -103,49 +156,123 @@ struct EditAudioView: View {
     private var confirmationButtons: some View {
         Group {
             Button("Cancel", role: .cancel) {}
-            Button("Apply Effects") { applyAudioEffects() }
+            Button("Save As New File") { saveProcessedAudio() }
         }
     }
     
-    private func applyAudioEffects() {
-        viewModel.processAudio(url: song.fileURL) { result in
-            switch result {
-            case .success(let processedURL):
-                // Generate new filename with effect info
-                let newFilename = generateProcessedFilename(for: song, pitch: viewModel.pitch, speed: viewModel.speed)
+    private func saveProcessedAudio() {
+        // Stop playback before processing
+        viewModel.previewPlayer.stop()
+        
+        Task {
+            do {
+                // Check space
                 let fileManager = FileManager.default
+                let documentsDirectory = fileManager.urls(for: .documentDirectory, in: .userDomainMask).first!
+                
+                let availableSpace = try documentsDirectory.resourceValues(forKeys: [.volumeAvailableCapacityForImportantUsageKey])
+                    .volumeAvailableCapacityForImportantUsage ?? 0
+                
+                //Min 10MB
+                guard availableSpace > 10_000_000 else {
+                    throw StorageError.insufficientSpace
+                }
+                
+                // Process audio with timeout
+                let processedURL = try await withThrowingTaskGroup(of: URL?.self) { group in
+                    // Audio processing task
+                    group.addTask {
+                        do {
+                            return try await viewModel.processAudioAsync(url: song.fileURL)
+                        } catch {
+                            await MainActor.run {
+                                alertTitle = "Processing Error"
+                                alertMessage = error.localizedDescription
+                                showingAlert = true
+                            }
+                            return nil
+                        }
+                    }
+                    
+                    // Timeout task
+                    group.addTask {
+                        try? await Task.sleep(nanoseconds: 60_000_000_000) // 60 seconds
+                        await MainActor.run {
+                            if viewModel.isProcessing {
+                                viewModel.isProcessing = false
+                                alertTitle = "Processing Timeout"
+                                alertMessage = "Audio processing is taking too long and has been cancelled."
+                                showingAlert = true
+                            }
+                        }
+                        return nil
+                    }
+                    
+                    // Get first result and cancel other tasks
+                    for await result in group {
+                        if let url = result {
+                            group.cancelAll()
+                            return url
+                        }
+                    }
+                    
+                    throw ProcessingError.cancelled
+                }
+                
+                // Generate unique filename with timestamp
+                let timestamp = Int(Date().timeIntervalSince1970)
+                let newFilename = generateProcessedFilename(
+                    for: song,
+                    pitch: viewModel.pitch,
+                    speed: viewModel.speed,
+                    timestamp: timestamp
+                )
+                
                 let targetURL = song.fileURL.deletingLastPathComponent()
                     .appendingPathComponent(newFilename)
                     .appendingPathExtension(song.fileURL.pathExtension)
+
+                // Handle existing file
+                if fileManager.fileExists(atPath: targetURL.path) {
+                    try fileManager.removeItem(at: targetURL)
+                }
                 
-                do {
-                    // If target already exists, remove it
-                    if fileManager.fileExists(atPath: targetURL.path) {
-                        try fileManager.removeItem(at: targetURL)
-                    }
-                    
-                    // Move processed file to target location
-                    try fileManager.moveItem(at: processedURL, to: targetURL)
-                    
-                    // Update library to include the new file
+                // Move processed file
+                try fileManager.moveItem(at: processedURL, to: targetURL)
+                
+                // Update library
+                await MainActor.run {
                     mainViewModel.processFiles()
-                    
                     dismiss()
-                } catch {
+                }
+                
+            } catch StorageError.insufficientSpace {
+                await MainActor.run {
+                    alertTitle = "Storage Error"
+                    alertMessage = "Not enough storage space available to save the processed audio."
+                    showingAlert = true
+                }
+            } catch ProcessingError.cancelled {
+                // Already handled
+            } catch {
+                await MainActor.run {
+                    alertTitle = "File Error"
                     alertMessage = "Error saving processed file: \(error.localizedDescription)"
                     showingAlert = true
                 }
-                
-            case .failure(let error):
-                alertMessage = error.localizedDescription
-                showingAlert = true
             }
         }
     }
     
-    private func generateProcessedFilename(for song: Song, pitch: Float, speed: Float) -> String {
+    private func generateProcessedFilename(for song: Song, pitch: Float, speed: Double, timestamp: Int) -> String {
         let baseName = song.fileURL.deletingPathExtension().lastPathComponent
-        return "\(baseName)_p\(Int(pitch))_s\(Int(speed * 100))"
+        return "\(baseName)_p\(Int(pitch))_s\(Int(speed * 100))_\(timestamp)"
+    }
+    
+    private func formatTime(_ time: TimeInterval) -> String {
+        let minutes = Int(time) / 60
+        let seconds = Int(time) % 60
+        return String(format: "%02d:%02d", minutes, seconds)
     }
 }
 

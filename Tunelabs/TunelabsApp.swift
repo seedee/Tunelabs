@@ -8,45 +8,55 @@
 import SwiftUI
 import SwiftData
 
-//Helper root view to ensure proper dependency injection timing
-struct RootView: View {
+//Dependency injection timing
+struct HelperRootView: View {
     @Environment(\.modelContext) private var modelContext
+    @StateObject private var mainViewModel: MainViewModel
+    
+    init(modelContext: ModelContext) {
+        _mainViewModel = StateObject(wrappedValue: MainViewModel(modelContext: modelContext))
+    }
     
     var body: some View {
         MainView()
-            .environmentObject(MainViewModel(modelContext: modelContext))
+            .environmentObject(mainViewModel)
     }
 }
 
 @main
 struct TunelabsApp: App {
-    /*var sharedModelContainer: ModelContainer = {
-        let schema = Schema([
+    let schema = Schema([
             Song.self,
-        ])
-        let modelConfiguration = ModelConfiguration(schema: schema, isStoredInMemoryOnly: false)
-
+    ])
+    let modelConfiguration: ModelConfiguration
+    let sharedModelContainer: ModelContainer
+    
+    init() {
+        // Using schema
+        self.modelConfiguration = ModelConfiguration(schema: schema, isStoredInMemoryOnly: false)
+        
         do {
-            return try ModelContainer(for: schema, configurations: [modelConfiguration])
+            // Configure container with persistence
+            sharedModelContainer = try ModelContainer(
+                for: Song.self,
+                configurations: modelConfiguration
+            )
+            
+            // Creates only once
+            instructionsFile()
         } catch {
             fatalError("Could not create ModelContainer: \(error)")
         }
-    }()*/
-    
-    init() {
-        createInstructionsFile()
     }
     
     var body: some Scene {
         WindowGroup {
-            RootView()
+            HelperRootView(modelContext: sharedModelContainer.mainContext)
         }
-        //.modelContainer(sharedModelContainer)
-        .modelContainer(for: Song.self)
+        .modelContainer(sharedModelContainer)
     }
     
-    private func createInstructionsFile() {
-        // Get Documents directory URL
+    private func instructionsFile() {
         guard let docsDir = FileManager.default.urls(
             for: .documentDirectory,
             in: .userDomainMask
@@ -55,21 +65,19 @@ struct TunelabsApp: App {
             return
         }
         
-        // Create file URL
         let instructionsURL = docsDir.appendingPathComponent("Instructions.txt")
         
-        // Check if file exists
         if !FileManager.default.fileExists(atPath: instructionsURL.path) {
-            let content = "Put your music in this folder and it will appear in the music library!"
+            let content = "Put your tunes in this folder, it will appear in the music library"
             
             do {
                 try content.write(to: instructionsURL, atomically: true, encoding: .utf8)
-                print("Instructions file created at: \(instructionsURL)")
+                print("Instructions file created: \(instructionsURL)")
             } catch {
                 print("Error creating instructions file: \(error.localizedDescription)")
             }
         } else {
-            print("Instructions file already exists at: \(instructionsURL)")
+            print("Instructions file read: \(instructionsURL)")
         }
     }
 }
