@@ -1,10 +1,9 @@
-//
 //  EditAudioView.swift
 //  Tunelabs
 //
 //  Created by Daniil Lebedev on 30/04/2025.
 //
-
+        
 import SwiftUI
 import SwiftData
 
@@ -178,8 +177,8 @@ struct EditAudioView: View {
                     throw StorageError.insufficientSpace
                 }
                 
-                // Process audio with timeout
-                let processedURL = try await withThrowingTaskGroup(of: URL?.self) { group in
+                // Process audio with timeout - explicitly declare as optional URL
+                let processedURL: URL? = try await withThrowingTaskGroup(of: URL?.self) { group in
                     // Audio processing task
                     group.addTask {
                         do {
@@ -216,6 +215,11 @@ struct EditAudioView: View {
                         }
                     }
                     
+                    return nil // Return nil instead of throwing to match return type
+                }
+                
+                // Safely unwrap processedURL
+                guard let processedURL = processedURL else {
                     throw ProcessingError.cancelled
                 }
                 
@@ -253,7 +257,12 @@ struct EditAudioView: View {
                     showingAlert = true
                 }
             } catch ProcessingError.cancelled {
-                // Already handled
+                // Already handled in the task group
+                await MainActor.run {
+                    alertTitle = "Processing Cancelled"
+                    alertMessage = "Audio processing was cancelled."
+                    showingAlert = true
+                }
             } catch {
                 await MainActor.run {
                     alertTitle = "File Error"
@@ -264,7 +273,7 @@ struct EditAudioView: View {
         }
     }
     
-    private func generateProcessedFilename(for song: Song, pitch: Float, speed: Double, timestamp: Int) -> String {
+    private func generateProcessedFilename(for song: Song, pitch: Float, speed: Float, timestamp: Int) -> String {
         let baseName = song.fileURL.deletingPathExtension().lastPathComponent
         return "\(baseName)_p\(Int(pitch))_s\(Int(speed * 100))_\(timestamp)"
     }
