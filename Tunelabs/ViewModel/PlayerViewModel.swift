@@ -137,7 +137,9 @@ class PlayerViewModel: ObservableObject {
             }
         }
         
-        // Configure player node
+        updateEffects() //Apply before playback starts
+        
+        // Configure player noed
         playerNode.stop()
         playerNode.scheduleBuffer(buffer, at: nil, options: .interruptsAtLoop)
         playerNode.play()

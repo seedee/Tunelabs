@@ -29,6 +29,7 @@ enum AudioEditingError: Error, LocalizedError {
 }
 
 class AudioEditor {
+    // Using a new audio engine for each processing task to avoid state contamination
     private var engine: AVAudioEngine
     private var player: AVAudioPlayerNode
     private var pitchControl: AVAudioUnitTimePitch
@@ -38,6 +39,10 @@ class AudioEditor {
         player = AVAudioPlayerNode()
         pitchControl = AVAudioUnitTimePitch()
         
+        setupAudioEngine()
+    }
+    
+    private func setupAudioEngine() {
         engine.attach(player)
         engine.attach(pitchControl)
         
@@ -46,11 +51,10 @@ class AudioEditor {
     }
     
     func processAudio(url: URL, pitch: Float, speed: Float) async throws -> URL {
-        // Stop any ongoing processing
-        cleanup()
+        // Reset everything for a clean slate
+        resetAudioEngine()
         
         do {
-            
             // Validate input parameters
             guard abs(pitch) <= 12 else {
                 throw AudioEditingError.processingError("Pitch must be between -12 and 12 semitones")
@@ -60,93 +64,196 @@ class AudioEditor {
             }
             
             // Load audio file
-            guard let audioFile = try? AVAudioFile(forReading: url) else {
+            let audioFile: AVAudioFile
+            do {
+                audioFile = try AVAudioFile(forReading: url)
+            } catch {
+                print("Error opening audio file: \(error)")
                 throw AudioEditingError.fileAccessError
             }
             
-            // Prepare buffer
-            guard let buffer = AVAudioPCMBuffer(pcmFormat: audioFile.processingFormat,
-                                                frameCapacity: AVAudioFrameCount(audioFile.length)) else {
+            // Get format information for better compatibility
+            let inputFormat = audioFile.processingFormat
+            print("Processing audio with format: \(inputFormat.sampleRate) Hz, \(inputFormat.channelCount) channels")
+            
+            // Prepare buffer with appropriate capacity
+            guard let buffer = AVAudioPCMBuffer(
+                pcmFormat: inputFormat,
+                frameCapacity: AVAudioFrameCount(audioFile.length)
+            ) else {
                 throw AudioEditingError.formatError
             }
             
-            try audioFile.read(into: buffer)
+            // Read file into buffer
+            do {
+                try audioFile.read(into: buffer)
+            } catch {
+                print("Error reading audio data: \(error)")
+                throw AudioEditingError.fileAccessError
+            }
             
-            // Prepare output file
+            // Create unique output filename
             let outputURL = FileManager.default.temporaryDirectory
                 .appendingPathComponent(UUID().uuidString)
                 .appendingPathExtension(url.pathExtension)
             
-            // Configure audio processing
-            let mainMixerNode = engine.mainMixerNode
-            let outputNode = engine.outputNode
-            let outputFormat = outputNode.outputFormat(forBus: 0)
-            
-            // Reset and configure engine
-            engine.stop()
-            engine.disconnectNodeInput(mainMixerNode)
-            
-            // Apply pitch and speed effects
+            // Configure effects
             pitchControl.pitch = pitch
             pitchControl.rate = speed
             
-            // Reconnect nodes
-            engine.connect(player, to: pitchControl, format: nil)
-            engine.connect(pitchControl, to: mainMixerNode, format: nil)
-            engine.connect(mainMixerNode, to: outputNode, format: outputFormat)
+            // Ensure engine is stopped before configuration
+            if engine.isRunning {
+                engine.stop()
+            }
             
-            // Prepare for rendering
-            try engine.enableManualRenderingMode(.offline,
-                                                 format: outputFormat,
-                                                 maximumFrameCount: 4096)
+            // Connect with explicit format
+            engine.connect(player, to: pitchControl, format: inputFormat)
+            engine.connect(pitchControl, to: engine.mainMixerNode, format: inputFormat)
             
-            // Create output file
-            let outputFile = try AVAudioFile(
-                forWriting: outputURL,
-                settings: outputFormat.settings,
-                commonFormat: .pcmFormatFloat32,
-                interleaved: false
-            )
+            // Enable manual rendering mode with appropriate buffer size
+            do {
+                // Use a smaller frame count (1024) for more stable processing
+                try engine.enableManualRenderingMode(
+                    .offline,
+                    format: inputFormat,
+                    maximumFrameCount: 1024
+                )
+            } catch {
+                print("Failed to enable manual rendering: \(error)")
+                throw AudioEditingError.processingError("Could not configure audio engine: \(error.localizedDescription)")
+            }
             
-            // Start engine and player
-            try engine.start()
+            // Create output file with matching settings
+            let outputFile: AVAudioFile
+            do {
+                outputFile = try AVAudioFile(
+                    forWriting: outputURL,
+                    settings: inputFormat.settings,
+                    commonFormat: .pcmFormatFloat32,
+                    interleaved: false
+                )
+            } catch {
+                print("Failed to create output file: \(error)")
+                throw AudioEditingError.exportError
+            }
+            
+            // Start engine
+            do {
+                try engine.start()
+            } catch {
+                print("Failed to start audio engine: \(error)")
+                throw AudioEditingError.processingError("Could not start audio engine: \(error.localizedDescription)")
+            }
+            
+            // Schedule buffer playback
             player.scheduleBuffer(buffer, at: nil, options: .interrupts, completionHandler: nil)
             player.play()
             
-            // Prepare output buffer
-            let outputBuffer = AVAudioPCMBuffer(
-                pcmFormat: outputFormat,
-                frameCapacity: 4096
-            )!
-            
-            // Render audio
-            while try engine.renderOffline(AVAudioFrameCount(buffer.frameLength), to: outputBuffer) == .success {
-                try outputFile.write(from: outputBuffer)
+            // Create render buffer with appropriate size
+            guard let renderBuffer = AVAudioPCMBuffer(
+                pcmFormat: inputFormat,
+                frameCapacity: 1024
+            ) else {
+                throw AudioEditingError.formatError
             }
             
-            // Cleanup
+            // Process audio in smaller chunks for better stability
+            var renderedFrames: AVAudioFrameCount = 0
+            let totalFrames = AVAudioFrameCount(buffer.frameLength)
+            
+            print("Starting rendering: \(totalFrames) total frames")
+            
+            // Process in smaller chunks (1024 frames) with more graceful error handling
+            while renderedFrames < totalFrames {
+                let framesToRender = min(1024, totalFrames - renderedFrames)
+                
+                // Clear the render buffer for this iteration
+                for i in 0..<renderBuffer.frameLength {
+                    for channel in 0..<renderBuffer.format.channelCount {
+                        renderBuffer.floatChannelData?[Int(channel)][Int(i)] = 0.0
+                    }
+                }
+                
+                // Render the next chunk
+                let renderStatus = try engine.renderOffline(framesToRender, to: renderBuffer)
+                
+                // Handle render status
+                switch renderStatus {
+                case .success:
+                    // Write successful render to output file
+                    do {
+                        try outputFile.write(from: renderBuffer)
+                        renderedFrames += framesToRender
+                        
+                        // Log progress periodically
+                        if renderedFrames % 44100 == 0 { // Log about once per second of audio
+                            print("Rendered \(renderedFrames)/\(totalFrames) frames (\(Int(Double(renderedFrames) / Double(totalFrames) * 100))%)")
+                        }
+                    } catch {
+                        print("Failed to write to output file: \(error)")
+                        throw AudioEditingError.exportError
+                    }
+                    
+                case .insufficientDataFromInputNode:
+                    // This can happen when we've reached the end of the audio
+                    print("Reached end of input buffer at \(renderedFrames)/\(totalFrames) frames")
+                    break
+                    
+                case .cannotDoInCurrentContext:
+                    throw AudioEditingError.processingError("Cannot render in current context")
+                    
+                case .error:
+                    throw AudioEditingError.processingError("Engine rendering error")
+                    
+                @unknown default:
+                    throw AudioEditingError.processingError("Unknown rendering error")
+                }
+                
+                // Break if we've reached the end for any reason
+                if renderStatus != .success {
+                    break
+                }
+            }
+            
+            print("Rendering complete: \(renderedFrames)/\(totalFrames) frames processed")
+            
+            // Stop engine and cleanup
             cleanup()
             
             return outputURL
             
         } catch let error as AudioEditingError {
-            // Rethrow known audio editing errors
+            // Clean up on error
+            cleanup()
             throw error
         } catch {
-            // Log unexpected errors
+            // Clean up on unexpected error
+            cleanup()
             print("Unexpected audio processing error: \(error)")
             throw AudioEditingError.processingError(error.localizedDescription)
         }
     }
     
+    private func resetAudioEngine() {
+        cleanup()
+        
+        // Create fresh engine components
+        engine = AVAudioEngine()
+        player = AVAudioPlayerNode()
+        pitchControl = AVAudioUnitTimePitch()
+        
+        // Set up clean configuration
+        setupAudioEngine()
+    }
+    
     private func cleanup() {
-        do {
-            if engine.isRunning {
-                player.stop()
-                engine.stop()
-            }
-        } catch {
-            print("Error during audio engine cleanup: \(error)")
+        // Stop player and engine if running
+        if player.isPlaying {
+            player.stop()
+        }
+        
+        if engine.isRunning {
+            engine.stop()
         }
     }
     
