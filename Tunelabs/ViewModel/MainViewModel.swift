@@ -17,14 +17,26 @@ class MainViewModel: ObservableObject {
     @Query private var songs: [Song]
     private let modelContext: ModelContext
     private let watcherManager = DirectoryWatcherManager()
+    private var initialScanComplete = false
     let allowedExtensions = ["mp3", "wav", "m4a", "aiff", "aif"]
     
     init(modelContext: ModelContext) {
         self.modelContext = modelContext
-        startDirectoryWatcher()
         
-        // Perform initial library refresh
-        processFiles()
+        // Perform initial library refresh first
+        Task {
+            await performInitialScan()
+            
+            // Start watching for changes only after initial scan
+            startDirectoryWatcher()
+        }
+    }
+    
+    private func performInitialScan() async {
+        print("Performing initial library scan...")
+        await scanLibrary()
+        initialScanComplete = true
+        print("Initial library scan complete")
     }
     
     func saveContext() {
@@ -40,63 +52,99 @@ class MainViewModel: ObservableObject {
     }
     
     private func startDirectoryWatcher() {
+        print("Starting directory watcher...")
         watcherManager.startWatching { [weak self] in
-            self?.processFiles()
+            guard let self = self, self.initialScanComplete else { return }
+            
+            print("Directory watcher triggered library scan")
+            Task {
+                await self.scanLibrary()
+            }
         }
     }
     
     func updateSongURL(from oldURL: URL, to newURL: URL) {
-        guard let song = songs.first(where: { $0.fileURL == oldURL }) else { return }
+        guard let song = songs.first(where: { $0.fileURL.path == oldURL.path }) else { return }
         song.fileURL = newURL
         saveContext()
     }
     
+    // Call this method to manually refresh the library
     func processFiles() {
         Task {
-            guard let docsDir = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first else {
-                print("Error accessing documents directory")
-                return
+            await scanLibrary()
+        }
+    }
+    
+    // The core scanning function, shared by, and handles both initial scan and watcher-triggered scans
+    private func scanLibrary() async {
+        print("Scanning library for changes...")
+        
+        guard let docsDir = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first else {
+            print("Error accessing documents directory")
+            return
+        }
+        
+        do {
+            // Get all audio files in the documents directory
+            let files = try FileManager.default.contentsOfDirectory(at: docsDir, includingPropertiesForKeys: nil)
+            let audioFiles = files.filter { self.allowedExtensions.contains($0.pathExtension.lowercased()) }
+            
+            print("Found \(audioFiles.count) audio files in documents directory")
+            
+            // Create a set of paths for efficient lookup
+            let libraryFilePaths = Set(audioFiles.map { $0.path })
+            
+            // Fetch all existing songs from the database
+            let fetchDescriptor = FetchDescriptor<Song>()
+            let existingSongs = try modelContext.fetch(fetchDescriptor)
+            let existingSongPaths = Dictionary(uniqueKeysWithValues: existingSongs.map { ($0.fileURL.path, $0) })
+            
+            // Track changes for logging
+            var addedCount = 0
+            var removedCount = 0
+            
+            // Process new files
+            for fileURL in audioFiles {
+                let filePath = fileURL.path
+                
+                if existingSongPaths[filePath] == nil {
+                    // This is a new file - add it to the library
+                    print("Adding new song: \(fileURL.lastPathComponent)")
+                    
+                    let metadata = await MetadataHandler.readMetadata(from: fileURL)
+                    let song = Song(
+                        fileURL: fileURL,
+                        artwork: metadata.artwork,
+                        title: metadata.title,
+                        artist: metadata.artist,
+                        duration: metadata.duration
+                    )
+                    
+                    modelContext.insert(song)
+                    addedCount += 1
+                }
             }
             
-            do {
-                let files = try FileManager.default.contentsOfDirectory(at: docsDir, includingPropertiesForKeys: nil)
-                let audioFiles = files.filter { self.allowedExtensions.contains($0.pathExtension.lowercased()) }
-                
-                print("Found \(audioFiles.count) audio files in documents directory")
-                
-                // Fetch existing songs with their file URLs
-                let existingSongURLs = try modelContext.fetch(FetchDescriptor<Song>()).map { $0.fileURL }
-                                
-                // Track newly added songs to prevent multiple additions in the same session
-                var addedSongURLs = Set<URL>()
-                
-                // Add new files to library
-                for fileURL in audioFiles {
-                    // Check if the song is already in the library or has been added in this session
-                    if !existingSongURLs.contains(fileURL) && !addedSongURLs.contains(fileURL) {
-                        print("Adding new song: \(fileURL.lastPathComponent)")
-                        
-                        let metadata = await MetadataHandler.readMetadata(from: fileURL)
-                        let song = Song(
-                            fileURL: fileURL,
-                            artwork: metadata.artwork,
-                            title: metadata.title,
-                            artist: metadata.artist,
-                            duration: metadata.duration
-                        )
-                        
-                        modelContext.insert(song)
-                        addedSongURLs.insert(fileURL)
-                    } else {
-                        print("Skipping already added song: \(fileURL.lastPathComponent)")
-                    }
+            // Remove songs that no longer exist in the file system
+            for (path, song) in existingSongPaths {
+                if !libraryFilePaths.contains(path) {
+                    print("Removing deleted song: \(song.fileURL.lastPathComponent)")
+                    modelContext.delete(song)
+                    removedCount += 1
                 }
-                
-                try modelContext.save()
-                
-            } catch {
-                print("File processing error: \(error)")
             }
+            
+            // Save changes if any were made
+            if addedCount > 0 || removedCount > 0 {
+                print("Library changes: \(addedCount) songs added, \(removedCount) songs removed")
+                try modelContext.save()
+            } else {
+                print("No changes detected in library")
+            }
+            
+        } catch {
+            print("Library scan error: \(error)")
         }
     }
     

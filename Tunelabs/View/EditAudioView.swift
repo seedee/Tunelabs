@@ -207,8 +207,7 @@ struct EditAudioView: View {
                         return nil
                     }
                     
-                    // Get first result and cancel other tasks
-                    for await result in group {
+                    for try await result in group {
                         if let url = result {
                             group.cancelAll()
                             return url
