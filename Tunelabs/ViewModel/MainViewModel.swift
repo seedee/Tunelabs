@@ -20,6 +20,9 @@ class MainViewModel: ObservableObject {
     private var initialScanComplete = false
     let allowedExtensions = ["mp3", "wav", "m4a", "aiff", "aif"]
     
+    // Make playerViewModel accessible
+    @Published var playerViewModel = PlayerViewModel()
+    
     init(modelContext: ModelContext) {
         self.modelContext = modelContext
         
@@ -66,6 +69,11 @@ class MainViewModel: ObservableObject {
     func updateSongURL(from oldURL: URL, to newURL: URL) {
         guard let song = songs.first(where: { $0.fileURL.path == oldURL.path }) else { return }
         song.fileURL = newURL
+        
+        // Update player if this was the selected song
+        if song.id == selectedSong?.id {
+            playerViewModel.handleNewFile(newURL)
+        }
         saveContext()
     }
     

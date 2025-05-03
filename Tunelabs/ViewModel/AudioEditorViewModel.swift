@@ -24,27 +24,13 @@ extension AudioEditorViewModel {
 }
 
 class AudioEditorViewModel: ObservableObject {
-    @Published var pitch: Float = 0.0 {
-        didSet { updatePreviewEffects() }
-    }
-    @Published var speed: Float = 1.0 {
-        didSet { updatePreviewEffects() }
-    }
+    @Published var pitch: Float = 0.0
+    @Published var speed: Float = 1.0
     @Published var isProcessing = false
     @Published var errorMessage: String?
     
-    @Published var previewPlayer = AudioPreviewPlayer()
-    
     private let audioEditor = AudioEditor()
     private var cancellables = Set<AnyCancellable>()
-    
-    func loadAudio(url: URL) {
-        previewPlayer.loadAudio(url: url)
-    }
-        
-    private func updatePreviewEffects() {
-        previewPlayer.updateEffects(pitch: pitch, speed: speed)
-    }
     
     func processAudio(url: URL, completion: @escaping (Result<URL, Error>) -> Void) {
         guard !isProcessing else { return }

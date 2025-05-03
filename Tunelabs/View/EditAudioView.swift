@@ -10,19 +10,28 @@ import SwiftData
 struct EditAudioView: View {
     @Environment(\.dismiss) private var dismiss
     @EnvironmentObject private var mainViewModel: MainViewModel
-    @StateObject private var viewModel = AudioEditorViewModel()
     @State private var showConfirmDialog = false
     @State private var showingAlert = false
     @State private var alertMessage = ""
     @State private var alertTitle = "Error"
     
+    // Local state for UI binding
+    @State private var localPitch: Float
+    @State private var localSpeed: Float
+    
     let song: Song
+    
+    init(song: Song) {
+        self.song = song
+        // Initialize with current player values to avoid jumps
+        _localPitch = State(initialValue: 0)
+        _localSpeed = State(initialValue: 1)
+    }
     
     var body: some View {
         NavigationStack {
             Form {
                 effectsSection
-                playbackSection
                 infoSection
             }
             .navigationTitle("Edit Audio")
@@ -37,32 +46,13 @@ struct EditAudioView: View {
             } message: {
                 Text(alertMessage)
             }
-            .disabled(viewModel.isProcessing)
-            .overlay {
-                if viewModel.isProcessing {
-                    ProgressView("Processing audio...")
-                        .padding()
-                        .background(Color(.systemBackground))
-                        .cornerRadius(8)
-                        .shadow(radius: 2)
-                }
-            }
             .onAppear {
-                loadAudio()
+                // Start an editing session and sync local values
+                mainViewModel.playerViewModel.beginEditingSession()
+                localPitch = mainViewModel.playerViewModel.pitch
+                localSpeed = mainViewModel.playerViewModel.speed
+                print("Edit view appeared, pitch: \(localPitch), speed: \(localSpeed)")
             }
-            .onDisappear {
-                viewModel.previewPlayer.stop()
-            }
-        }
-    }
-    
-    private func loadAudio() {
-        do {
-            try viewModel.loadAudio(url: song.fileURL)
-        } catch {
-            alertTitle = "Audio Load Error"
-            alertMessage = "Failed to load audio: \(error.localizedDescription)"
-            showingAlert = true
         }
     }
     
@@ -72,9 +62,12 @@ struct EditAudioView: View {
                 HStack {
                     Text("Pitch")
                     Spacer()
-                    Text("\(Int(viewModel.pitch)) semitones")
+                    Text("\(Int(localPitch)) semitones")
                 }
-                Slider(value: $viewModel.pitch, in: -12...12, step: 1)
+                Slider(value: $localPitch, in: -12...12, step: 1)
+                    .onChange(of: localPitch) { _, newValue in
+                        mainViewModel.playerViewModel.pitch = newValue
+                    }
             }
             .padding(.vertical, 4)
             
@@ -82,55 +75,28 @@ struct EditAudioView: View {
                 HStack {
                     Text("Speed")
                     Spacer()
-                    Text(String(format: "%.2fx", viewModel.speed))
+                    Text(String(format: "%.2fx", localSpeed))
                 }
-                Slider(value: $viewModel.speed, in: 0.5...2.0, step: 0.1)
+                Slider(value: $localSpeed, in: 0.5...2.0, step: 0.1)
+                    .onChange(of: localSpeed) { _, newValue in
+                        mainViewModel.playerViewModel.speed = newValue
+                    }
             }
             .padding(.vertical, 4)
             
             Button("Reset to Default") {
-                viewModel.resetParameters()
+                localPitch = 0
+                localSpeed = 1
+                mainViewModel.playerViewModel.pitch = 0
+                mainViewModel.playerViewModel.speed = 1
             }
             .frame(maxWidth: .infinity, alignment: .center)
         }
     }
     
-    private var playbackSection: some View {
-        Section("Preview") {
-            HStack {
-                Button {
-                    if viewModel.previewPlayer.isPlaying {
-                        viewModel.previewPlayer.pause()
-                    } else {
-                        viewModel.previewPlayer.play()
-                    }
-                } label: {
-                    Image(systemName: viewModel.previewPlayer.isPlaying ? "pause.fill" : "play.fill")
-                        .font(.title2)
-                        .padding(.horizontal, 8)
-                }
-                
-                Button {
-                    viewModel.previewPlayer.stop()
-                } label: {
-                    Image(systemName: "stop.fill")
-                        .font(.title2)
-                        .padding(.horizontal, 8)
-                }
-                
-                Spacer()
-                
-                Text(formatTime(viewModel.previewPlayer.currentTime))
-                Text(" / ")
-                Text(formatTime(viewModel.previewPlayer.duration))
-            }
-            .padding(.vertical, 8)
-        }
-    }
-    
     private var infoSection: some View {
         Section("Info") {
-            Text("Adjust effects in real-time without changing the original file. Use \"Save As\" to create a new audio file with the effects applied.")
+            Text("Changes are applied to the currently playing audio in real-time. \"Save As\" to create a new audio file with the effects applied, or \"Cancel\" to revert to the original sound.")
                 .font(.caption)
                 .foregroundStyle(.secondary)
         }
@@ -140,6 +106,8 @@ struct EditAudioView: View {
         Group {
             ToolbarItem(placement: .cancellationAction) {
                 Button("Cancel") {
+                    // Reset to original values
+                    mainViewModel.playerViewModel.cancelEditing()
                     dismiss()
                 }
             }
@@ -147,7 +115,6 @@ struct EditAudioView: View {
                 Button("Save As") {
                     showConfirmDialog = true
                 }
-                .disabled(viewModel.isProcessing)
             }
         }
     }
@@ -160,9 +127,6 @@ struct EditAudioView: View {
     }
     
     private func saveProcessedAudio() {
-        // Stop playback before processing
-        viewModel.previewPlayer.stop()
-        
         Task {
             do {
                 // Check space
@@ -177,64 +141,33 @@ struct EditAudioView: View {
                     throw StorageError.insufficientSpace
                 }
                 
-                // Process audio with timeout - explicitly declare as optional URL
-                let processedURL: URL? = try await withThrowingTaskGroup(of: URL?.self) { group in
-                    // Audio processing task
-                    group.addTask {
-                        do {
-                            return try await viewModel.processAudioAsync(url: song.fileURL)
-                        } catch {
-                            await MainActor.run {
-                                alertTitle = "Processing Error"
-                                alertMessage = error.localizedDescription
-                                showingAlert = true
-                            }
-                            return nil
-                        }
-                    }
-                    
-                    // Timeout task
-                    group.addTask {
-                        try? await Task.sleep(nanoseconds: 60_000_000_000) // 60 seconds
-                        await MainActor.run {
-                            if viewModel.isProcessing {
-                                viewModel.isProcessing = false
-                                alertTitle = "Processing Timeout"
-                                alertMessage = "Audio processing is taking too long and has been cancelled."
-                                showingAlert = true
-                            }
-                        }
-                        return nil
-                    }
-                    
-                    for try await result in group {
-                        if let url = result {
-                            group.cancelAll()
-                            return url
-                        }
-                    }
-                    
-                    return nil // Return nil instead of throwing to match return type
-                }
+                // Create a new audio editor for file processing
+                let audioEditor = AudioEditor()
                 
-                // Safely unwrap processedURL
-                guard let processedURL = processedURL else {
-                    throw ProcessingError.cancelled
-                }
+                // Get current effect values from the player
+                let currentPitch = mainViewModel.playerViewModel.pitch
+                let currentSpeed = mainViewModel.playerViewModel.speed
+                
+                // Process audio with the current effect values
+                let processedURL = try await audioEditor.processAudio(
+                    url: song.fileURL,
+                    pitch: currentPitch,
+                    speed: currentSpeed
+                )
                 
                 // Generate unique filename with timestamp
                 let timestamp = Int(Date().timeIntervalSince1970)
                 let newFilename = generateProcessedFilename(
                     for: song,
-                    pitch: viewModel.pitch,
-                    speed: viewModel.speed,
+                    pitch: mainViewModel.playerViewModel.pitch,
+                    speed: mainViewModel.playerViewModel.speed,
                     timestamp: timestamp
                 )
                 
                 let targetURL = song.fileURL.deletingLastPathComponent()
                     .appendingPathComponent(newFilename)
                     .appendingPathExtension(song.fileURL.pathExtension)
-
+                
                 // Handle existing file
                 if fileManager.fileExists(atPath: targetURL.path) {
                     try fileManager.removeItem(at: targetURL)
@@ -255,13 +188,6 @@ struct EditAudioView: View {
                     alertMessage = "Not enough storage space available to save the processed audio."
                     showingAlert = true
                 }
-            } catch ProcessingError.cancelled {
-                // Already handled in the task group
-                await MainActor.run {
-                    alertTitle = "Processing Cancelled"
-                    alertMessage = "Audio processing was cancelled."
-                    showingAlert = true
-                }
             } catch {
                 await MainActor.run {
                     alertTitle = "File Error"
@@ -276,16 +202,4 @@ struct EditAudioView: View {
         let baseName = song.fileURL.deletingPathExtension().lastPathComponent
         return "\(baseName)_p\(Int(pitch))_s\(Int(speed * 100))_\(timestamp)"
     }
-    
-    private func formatTime(_ time: TimeInterval) -> String {
-        let minutes = Int(time) / 60
-        let seconds = Int(time) % 60
-        return String(format: "%02d:%02d", minutes, seconds)
-    }
-}
-
-#Preview {
-    let song = Song(fileURL: URL(string: "file:///sample.mp3")!)
-    return EditAudioView(song: song)
-        .environmentObject(MainViewModel(modelContext: try! ModelContainer(for: Song.self).mainContext))
 }

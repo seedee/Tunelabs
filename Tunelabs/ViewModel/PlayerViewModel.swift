@@ -14,12 +14,76 @@ class PlayerViewModel: ObservableObject {
     @Published var isPlaying = false
     @Published var totalTime: TimeInterval = 0.0
     @Published var currentTime: TimeInterval = 0.0
-    private var player: AVAudioPlayer?
     private var timer: AnyCancellable?
-    private var stopObserver: Any?
+    // Audio engine components
+    private var engine: AVAudioEngine = AVAudioEngine()
+    private var playerNode: AVAudioPlayerNode = AVAudioPlayerNode()
+    private var pitchControl: AVAudioUnitTimePitch = AVAudioUnitTimePitch()
+    private var audioFile: AVAudioFile?
+    private var buffer: AVAudioPCMBuffer?
+    private var currentURL: URL?
+    
+    // Effect parameters
+    @Published var pitch: Float = 0.0 {
+        didSet { if engine.isRunning { updateEffects() } }
+    }
+    @Published var speed: Float = 1.0 {
+        didSet { if engine.isRunning { updateEffects() } }
+    }
+    
+    // Store original values for cancellation
+    private var originalPitch: Float = 0.0
+    private var originalSpeed: Float = 1.0
+    
+    init() {
+        setupAudioEngine()
+    }
     
     deinit {
         timer?.cancel()
+        cleanupAudioEngine()
+    }
+    
+    private func setupAudioEngine() {
+        // Configure audio engine
+        engine.attach(playerNode)
+        engine.attach(pitchControl)
+        
+        // Connect nodes
+        engine.connect(playerNode, to: pitchControl, format: nil)
+        engine.connect(pitchControl, to: engine.mainMixerNode, format: nil)
+        
+        // Set initial effect values
+        updateEffects()
+        
+        // Prepare engine
+        engine.prepare()
+    }
+    
+    private func cleanupAudioEngine() {
+        if engine.isRunning {
+            playerNode.stop()
+            engine.stop()
+        }
+    }
+    
+    private func updateEffects() {
+        pitchControl.pitch = pitch
+        pitchControl.rate = speed
+    }
+    
+    func beginEditingSession() {
+        // Store original values to enable cancellation
+        originalPitch = pitch
+        originalSpeed = speed
+        print("Starting edit session with pitch: \(pitch), speed: \(speed)")
+    }
+    
+    func cancelEditing() {
+        // Restore original values
+        pitch = originalPitch
+        speed = originalSpeed
+        print("Cancelled editing, restored pitch: \(pitch), speed: \(speed)")
     }
     
     // React to file changes
@@ -28,36 +92,72 @@ class PlayerViewModel: ObservableObject {
             resetPlayer()
             return
         }
-        setupAudio(with: url)
+        loadAudio(with: url)
         playAudio()
     }
     
-    private func setupAudio(with url: URL) {
+    private func loadAudio(with url: URL) {
         stopAudio()
+        currentURL = url
+        
         do {
-            player = try AVAudioPlayer(contentsOf: url)
-            player?.prepareToPlay()
-            totalTime = player?.duration ?? 0.0
+            // Load audio file
+            audioFile = try AVAudioFile(forReading: url)
+            guard let file = audioFile else { return }
+            
+            // Set duration
+            totalTime = Double(file.length) / file.processingFormat.sampleRate
             currentTime = 0.0
+            
+            // Create buffer for playback
+            buffer = AVAudioPCMBuffer(
+                pcmFormat: file.processingFormat,
+                frameCapacity: AVAudioFrameCount(file.length)
+            )
+            
+            // Read file into buffer
+            try file.read(into: buffer!)
+            
+            print("Audio loaded: \(url.lastPathComponent), duration: \(totalTime)s")
         } catch {
-            print("Error loading audio: \(error)")
+            print("Error loading audio: \(error.localizedDescription)")
         }
     }
     
     func playAudio() {
-        player?.play()
+        guard let buffer = buffer else { return }
+        
+        // Start engine if needed
+        if !engine.isRunning {
+            do {
+                try engine.start()
+            } catch {
+                print("Error starting audio engine: \(error.localizedDescription)")
+                return
+            }
+        }
+        
+        // Configure player node
+        playerNode.stop()
+        playerNode.scheduleBuffer(buffer, at: nil, options: .interruptsAtLoop)
+        playerNode.play()
+        
         isPlaying = true
         startTimer()
+        print("Started playback with effects - pitch: \(pitch), speed: \(speed)")
     }
     
     func stopAudio() {
-        player?.stop()
+        playerNode.stop()
         isPlaying = false
         timer?.cancel()
     }
     
     func resetPlayer() {
-        player = nil
+        stopAudio()
+        audioFile = nil
+        buffer = nil
+        currentURL = nil
         totalTime = 0.0
         currentTime = 0.0
         isPlaying = false
@@ -65,7 +165,21 @@ class PlayerViewModel: ObservableObject {
     }
     
     func audioTime(to time: TimeInterval) {
-        player?.currentTime = time
+        currentTime = time
+        
+        // Only restart playback if we need to seek
+        guard let buffer = buffer else { return }
+        
+        let wasPlaying = isPlaying
+        playerNode.stop()
+        
+        // Just reschedule the entire buffer and update the display time
+        playerNode.scheduleBuffer(buffer, at: nil, options: .interrupts)
+        
+        // Resume playback if it was playing
+        if wasPlaying {
+            playerNode.play()
+        }
     }
     
     private func startTimer() {
@@ -77,10 +191,17 @@ class PlayerViewModel: ObservableObject {
     }
     
     private func updateProgress() {
-        guard let player = player else { return }
-        currentTime = player.currentTime
+        guard let file = audioFile, engine.isRunning else { return }
         
-        if !player.isPlaying {
+        // If node time is available, use it for precise timing
+        if let nodeTime = playerNode.lastRenderTime,
+           let playerTime = playerNode.playerTime(forNodeTime: nodeTime) {
+            let sampleRate = file.processingFormat.sampleRate
+            currentTime = Double(playerTime.sampleTime) / sampleRate
+        }
+        
+        // Check if playback has stopped
+        if !playerNode.isPlaying {
             isPlaying = false
             timer?.cancel()
         }
