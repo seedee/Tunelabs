@@ -98,7 +98,7 @@ class AudioEditor {
                 .appendingPathExtension(url.pathExtension)
             
             // Configure effects
-            pitchControl.pitch = pitch
+            pitchControl.pitch = pitch * 100 // Semitones to cents
             pitchControl.rate = speed
             
             // Ensure engine is stopped before configuration

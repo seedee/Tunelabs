@@ -68,7 +68,7 @@ class PlayerViewModel: ObservableObject {
     }
     
     private func updateEffects() {
-        pitchControl.pitch = pitch
+        pitchControl.pitch = pitch * 100
         pitchControl.rate = speed
     }
     

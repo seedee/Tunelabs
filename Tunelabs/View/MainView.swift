@@ -26,7 +26,12 @@ struct MainView: View {
                 case 0:
                     LibraryView()
                 case 1:
-                    SongView()
+                    if let selectedSong = viewModel.selectedSong {
+                        SongView(song: selectedSong)
+                    } else {
+                        Text("Select a song!")
+                            .frame(maxHeight: .infinity)
+                    }
                 case 2:
                     Text("Settings")
                         .frame(maxHeight: .infinity)

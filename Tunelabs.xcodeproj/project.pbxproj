@@ -28,7 +28,6 @@
 		FD7B8F032D98317C0082B394 /* PlayerViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = FD7B8F022D98317C0082B394 /* PlayerViewModel.swift */; };
 		FD806B8F2DC26B9400FD8E69 /* AudioEditor.swift in Sources */ = {isa = PBXBuildFile; fileRef = FD806B8E2DC26B9400FD8E69 /* AudioEditor.swift */; };
 		FD806B912DC26C1800FD8E69 /* AudioEditorViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = FD806B902DC26C1800FD8E69 /* AudioEditorViewModel.swift */; };
-		FD806B932DC26C3C00FD8E69 /* EditAudioView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FD806B922DC26C3C00FD8E69 /* EditAudioView.swift */; };
 		FD806B952DC2CDE200FD8E69 /* AudioPreviewPlayer.swift in Sources */ = {isa = PBXBuildFile; fileRef = FD806B942DC2CDE200FD8E69 /* AudioPreviewPlayer.swift */; };
 		FD806B972DC319CE00FD8E69 /* Errors.swift in Sources */ = {isa = PBXBuildFile; fileRef = FD806B962DC319CE00FD8E69 /* Errors.swift */; };
 /* End PBXBuildFile section */
@@ -75,7 +74,6 @@
 		FD7B8F022D98317C0082B394 /* PlayerViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlayerViewModel.swift; sourceTree = "<group>"; };
 		FD806B8E2DC26B9400FD8E69 /* AudioEditor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AudioEditor.swift; sourceTree = "<group>"; };
 		FD806B902DC26C1800FD8E69 /* AudioEditorViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AudioEditorViewModel.swift; sourceTree = "<group>"; };
-		FD806B922DC26C3C00FD8E69 /* EditAudioView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EditAudioView.swift; sourceTree = "<group>"; };
 		FD806B942DC2CDE200FD8E69 /* AudioPreviewPlayer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AudioPreviewPlayer.swift; sourceTree = "<group>"; };
 		FD806B962DC319CE00FD8E69 /* Errors.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Errors.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -183,7 +181,6 @@
 				FD3AA9552D9A017100701965 /* SongView.swift */,
 				FD3AA9572D9A01CB00701965 /* ArtworkView.swift */,
 				FD205E312DC02BEC0059F1E1 /* EditMetadataView.swift */,
-				FD806B922DC26C3C00FD8E69 /* EditAudioView.swift */,
 			);
 			path = View;
 			sourceTree = "<group>";
@@ -348,7 +345,6 @@
 			buildActionMask = 2147483647;
 			files = (
 				FD7B8EFC2D982FE00082B394 /* DirectoryWatcher.swift in Sources */,
-				FD806B932DC26C3C00FD8E69 /* EditAudioView.swift in Sources */,
 				FD806B912DC26C1800FD8E69 /* AudioEditorViewModel.swift in Sources */,
 				FD7B8F032D98317C0082B394 /* PlayerViewModel.swift in Sources */,
 				FD806B952DC2CDE200FD8E69 /* AudioPreviewPlayer.swift in Sources */,

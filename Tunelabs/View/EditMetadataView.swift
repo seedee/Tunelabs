@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import SwiftData
 
 private struct EditableSong {
     var title: String?
@@ -19,6 +20,15 @@ struct EditMetadataView: View {
     @State private var editableSong: EditableSong
     @State private var showConfirmDialog = false
     @State private var errorMessage: String?
+    @State private var showingAlert = false
+    @State private var alertMessage = ""
+    @State private var alertTitle = "Error"
+    
+    // Local state for UI binding
+    @State private var localPitch: Float
+    @State private var localSpeed: Float
+    
+    let song: Song
     
     init(song: Song) {
         _editableSong = State(initialValue: EditableSong(
@@ -26,6 +36,10 @@ struct EditMetadataView: View {
             artist: song.artist,
             artwork: song.artwork
         ))
+        self.song = song
+        // Initialize with current player values to avoid jumps
+        _localPitch = State(initialValue: 0)
+        _localSpeed = State(initialValue: 1)
     }
     
     var body: some View {
