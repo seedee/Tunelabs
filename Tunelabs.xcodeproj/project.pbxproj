@@ -27,6 +27,8 @@
 		FD7B8F012D98304E0082B394 /* MainViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = FD7B8F002D98304E0082B394 /* MainViewModel.swift */; };
 		FD7B8F032D98317C0082B394 /* PlayerViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = FD7B8F022D98317C0082B394 /* PlayerViewModel.swift */; };
 		FD806B8F2DC26B9400FD8E69 /* AudioEditor.swift in Sources */ = {isa = PBXBuildFile; fileRef = FD806B8E2DC26B9400FD8E69 /* AudioEditor.swift */; };
+		FDCEF8182DD3356F003CE5EC /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FDCEF8172DD3356F003CE5EC /* SettingsView.swift */; };
+		FDCEF81A2DD33662003CE5EC /* ThemeManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = FDCEF8192DD33662003CE5EC /* ThemeManager.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -70,6 +72,8 @@
 		FD7B8F002D98304E0082B394 /* MainViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MainViewModel.swift; sourceTree = "<group>"; };
 		FD7B8F022D98317C0082B394 /* PlayerViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlayerViewModel.swift; sourceTree = "<group>"; };
 		FD806B8E2DC26B9400FD8E69 /* AudioEditor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AudioEditor.swift; sourceTree = "<group>"; };
+		FDCEF8172DD3356F003CE5EC /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
+		FDCEF8192DD33662003CE5EC /* ThemeManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ThemeManager.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -175,6 +179,7 @@
 				FD3AA9552D9A017100701965 /* SongView.swift */,
 				FD3AA9572D9A01CB00701965 /* ArtworkView.swift */,
 				FD205E312DC02BEC0059F1E1 /* MetadataView.swift */,
+				FDCEF8172DD3356F003CE5EC /* SettingsView.swift */,
 			);
 			path = View;
 			sourceTree = "<group>";
@@ -186,6 +191,7 @@
 				FD7B8EFD2D982FFF0082B394 /* DirectoryWatcherManager.swift */,
 				FD205E2F2DC02AEB0059F1E1 /* MetadataHandler.swift */,
 				FD806B8E2DC26B9400FD8E69 /* AudioEditor.swift */,
+				FDCEF8192DD33662003CE5EC /* ThemeManager.swift */,
 			);
 			path = Utilities;
 			sourceTree = "<group>";
@@ -335,6 +341,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				FDCEF8182DD3356F003CE5EC /* SettingsView.swift in Sources */,
 				FD7B8EFC2D982FE00082B394 /* DirectoryWatcher.swift in Sources */,
 				FD7B8F032D98317C0082B394 /* PlayerViewModel.swift in Sources */,
 				FD3AA9542D9A00EF00701965 /* LibraryView.swift in Sources */,
@@ -345,6 +352,7 @@
 				FD4C6F7E2D92BCE1009FC47D /* Song.swift in Sources */,
 				FD3AA9582D9A01CB00701965 /* ArtworkView.swift in Sources */,
 				FD7B8EFE2D982FFF0082B394 /* DirectoryWatcherManager.swift in Sources */,
+				FDCEF81A2DD33662003CE5EC /* ThemeManager.swift in Sources */,
 				FD3AA9562D9A017100701965 /* SongView.swift in Sources */,
 				FD205E302DC02AEB0059F1E1 /* MetadataHandler.swift in Sources */,
 				FD4C6F7A2D92BCE1009FC47D /* TunelabsApp.swift in Sources */,

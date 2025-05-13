@@ -13,6 +13,7 @@ struct HelperRootView: View {
     @Environment(\.modelContext) private var modelContext
     @StateObject private var mainViewModel: MainViewModel
     @StateObject private var playerViewModel: PlayerViewModel
+    @StateObject private var themeManager = ThemeManager()
     
     init(modelContext: ModelContext) {
         _mainViewModel = StateObject(wrappedValue: MainViewModel(modelContext: modelContext))
@@ -23,6 +24,8 @@ struct HelperRootView: View {
         MainView()
             .environmentObject(mainViewModel)
             .environmentObject(playerViewModel)
+            .environmentObject(themeManager)
+            .tint(themeManager.accentColor)
     }
 }
 

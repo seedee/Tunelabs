@@ -12,6 +12,7 @@ import SwiftData
 struct PlayerView: View {
     @EnvironmentObject private var mainViewModel: MainViewModel
     @EnvironmentObject private var playerViewModel: PlayerViewModel
+    @EnvironmentObject private var themeManager: ThemeManager
     @Environment(\.modelContext) private var modelContext
     @Environment(\.dismiss) private var dismiss
     @Query private var songs: [Song]

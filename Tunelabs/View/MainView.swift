@@ -12,14 +12,17 @@ import SlidingTabView
 struct MainView: View {
     @EnvironmentObject private var mainViewModel: MainViewModel
     @EnvironmentObject private var playerViewModel: PlayerViewModel
+    @EnvironmentObject private var themeManager: ThemeManager
     
     var body: some View {
         VStack {
             SlidingTabView(
                 selection: $mainViewModel.tabIndex,
                 tabs: ["Library", "Song", "Settings"],
+                font: .headline,
                 animation: .easeInOut,
-                inactiveAccentColor: .primary
+                
+                selectionBarColor: themeManager.accentColor
             )
             
             Group {
@@ -28,18 +31,22 @@ struct MainView: View {
                     LibraryView()
                         .environmentObject(mainViewModel)
                         .environmentObject(playerViewModel)
+                        .environmentObject(themeManager)
                 case 1:
                     if let selectedSong = mainViewModel.selectedSong {
                         SongView(song: selectedSong)
                             .environmentObject(mainViewModel)
                             .environmentObject(playerViewModel)
+                            .environmentObject(themeManager)
                     } else {
                         Text("Select a song!")
                             .frame(maxHeight: .infinity)
                     }
                 case 2:
-                    Text("Settings")
-                        .frame(maxHeight: .infinity)
+                    SettingsView()
+                        .environmentObject(mainViewModel)
+                        .environmentObject(playerViewModel)
+                        .environmentObject(themeManager)
                 default:
                     Text("Select a tab!")
                         .frame(maxHeight: .infinity)
@@ -49,6 +56,7 @@ struct MainView: View {
             PlayerView()
                 .environmentObject(mainViewModel)
                 .environmentObject(playerViewModel)
+                .environmentObject(themeManager)
         }
     }
 }
