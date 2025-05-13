@@ -20,6 +20,7 @@ enum StorageError: Error, LocalizedError {
 }
 
 private struct EditableSong {
+    var fileURL: URL?
     var title: String?
     var artist: String?
     var artwork: Data?
@@ -28,6 +29,7 @@ private struct EditableSong {
 struct SongView: View {
     
     @EnvironmentObject private var mainViewModel: MainViewModel
+    @EnvironmentObject private var playerViewModel: PlayerViewModel
     @Environment(\.modelContext) private var modelContext
     @Environment(\.dismiss) private var dismiss
     @Query private var songs: [Song]
@@ -47,6 +49,7 @@ struct SongView: View {
     
     init(song: Song) {
         _editableSong = State(initialValue: EditableSong(
+            fileURL: song.fileURL,
             title: song.title,
             artist: song.artist,
             artwork: song.artwork
@@ -90,15 +93,15 @@ struct SongView: View {
             }
             Slider(value: $localPitch, in: -12...12, step: 1)
                 .onChange(of: localPitch) { _, newValue in
-                    mainViewModel.playerViewModel.pitch = newValue
+                    playerViewModel.pitch = newValue
                 }
         }
         .padding()
         .onAppear {
             // Start an editing session and sync local values
-            mainViewModel.playerViewModel.beginEditingSession()
-            localPitch = mainViewModel.playerViewModel.pitch
-            localSpeed = mainViewModel.playerViewModel.speed
+            playerViewModel.beginEditingSession()
+            localPitch = playerViewModel.pitch
+            localSpeed = playerViewModel.speed
             print("SongView: localPitch: \(localPitch), localSpeed: \(localSpeed)")
         }
         VStack(alignment: .leading) {
@@ -109,7 +112,7 @@ struct SongView: View {
             }
             Slider(value: $localSpeed, in: 0.5...2.0, step: 0.1)
                 .onChange(of: localSpeed) { _, newValue in
-                    mainViewModel.playerViewModel.speed = newValue
+                    playerViewModel.speed = newValue
                 }
             
             
@@ -145,15 +148,15 @@ struct SongView: View {
     private func resetSliders() {
         localPitch = 0
         localSpeed = 1
-        mainViewModel.playerViewModel.pitch = 0
-        mainViewModel.playerViewModel.speed = 1
+        playerViewModel.pitch = 0
+        playerViewModel.speed = 1
     }
     
     private func saveNew() {
-        print("Saving pitch: \(mainViewModel.playerViewModel.pitch), speed: \(mainViewModel.playerViewModel.speed)")
+        print("Saving pitch: \(playerViewModel.pitch), speed: \(playerViewModel.speed)")
 
-        let currentTime = mainViewModel.playerViewModel.currentTime
-        let wasPlaying = mainViewModel.playerViewModel.isPlaying
+        let currentTime = playerViewModel.currentTime
+        let wasPlaying = playerViewModel.isPlaying
         
         // Save audio with current effects
         Task {
@@ -164,6 +167,7 @@ struct SongView: View {
                     alertMessage = "Processing with pitch: \(Int(localPitch)), speed: \(String(format: "%.1fx", localSpeed))"
                     showingAlert = true
                 }
+                
                 // Create a new audio editor for file processing
                 let audioEditor = AudioEditor()
                 
@@ -192,8 +196,8 @@ struct SongView: View {
                 }
                 try fileManager.moveItem(at: processedURL, to: targetURL)
                 
+                // Force model context to save
                 await MainActor.run {
-                    // Force the model context to save and wait for it
                     do {
                         mainViewModel.saveContext()
                     } catch {
@@ -201,28 +205,28 @@ struct SongView: View {
                     }
                 }
 
-
+                // Force refresh the library
                 await mainViewModel.processFiles()
-                try? await Task.sleep(nanoseconds: 500_000_000)
-                let newSong = mainViewModel.findSongByPath(targetURL.path)
+                let newSong = try await mainViewModel.findSongByURL(processedURL, targetURL.relativePath)
                 
-                if let newSong = newSong {
-                    print("Found new song: \(newSong.fileURL.lastPathComponent)")
-                    mainViewModel.playerViewModel.stopAudio()
-                    // Update the viewModel
-                    mainViewModel.selectedSong = mainViewModel.findSongByPath(newSong.fileURL.path)
+
+                // Show success message and guide user to Library tab
+                await MainActor.run {
+                    showingAlert = false // Dismiss processing alert
                     resetSliders()
-                    mainViewModel.playerViewModel.handleNewFile(newSong.fileURL)
-                    mainViewModel.playerViewModel.playAudio()
-                } else {
-                    print("ERROR: Failed to find song after multiple attempts. Database may be inconsistent.")
-                    
-                    // Since we're removing the fallback, we should at least show an error
-                    await MainActor.run {
-                        alertTitle = "Warning"
-                        alertMessage = "The file was created but could not be added to your library. Please restart the app."
-                        showingAlert = true
-                    }
+                    mainViewModel.tabIndex = 0 // Library tab indexs
+                    mainViewModel.tabIndex = 1
+                    alertTitle = "Song Created"
+                    alertMessage = "Your modified song has been saved as '\(newFilename).\(fileExtension)'. Go to the Library tab to play it."
+                    showingAlert = true
+                }
+                
+            } catch {
+                await MainActor.run {
+                    showingAlert = false
+                    alertTitle = "Error"
+                    alertMessage = "Failed to create modified song: \(error.localizedDescription)"
+                    showingAlert = true
                 }
             }
         }
@@ -247,8 +251,8 @@ struct SongView: View {
                 let audioEditor = AudioEditor()
                 
                 // Get current effect values from the player
-                let currentPitch = mainViewModel.playerViewModel.pitch
-                let currentSpeed = mainViewModel.playerViewModel.speed
+                let currentPitch = playerViewModel.pitch
+                let currentSpeed = playerViewModel.speed
                 
                 // Process audio with the current effect values
                 let processedURL = try await audioEditor.processAudio(
@@ -261,8 +265,8 @@ struct SongView: View {
                 let timestamp = Int(Date().timeIntervalSince1970)
                 let newFilename = generateProcessedFilename(
                     for: song,
-                    pitch: mainViewModel.playerViewModel.pitch,
-                    speed: mainViewModel.playerViewModel.speed,
+                    pitch: playerViewModel.pitch,
+                    speed: playerViewModel.speed,
                     timestamp: timestamp
                 )
                 
@@ -302,6 +306,6 @@ struct SongView: View {
     
     private func generateProcessedFilename(for song: Song, pitch: Float, speed: Float, timestamp: Int) -> String {
         let baseName = song.fileURL.deletingPathExtension().lastPathComponent
-        return "\(baseName)_p\(Int(pitch))_s\(Int(speed * 100))_\(timestamp)"
+        return "\(baseName)_pitch\(Int(pitch))s_speed\(Int(speed * 100))x_time\(timestamp)"
     }
 }

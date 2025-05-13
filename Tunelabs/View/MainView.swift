@@ -10,24 +10,29 @@ import SwiftData
 import SlidingTabView
 
 struct MainView: View {
-    @EnvironmentObject private var viewModel: MainViewModel
+    @EnvironmentObject private var mainViewModel: MainViewModel
+    @EnvironmentObject private var playerViewModel: PlayerViewModel
     
     var body: some View {
         VStack {
             SlidingTabView(
-                selection: $viewModel.tabIndex,
+                selection: $mainViewModel.tabIndex,
                 tabs: ["Library", "Song", "Settings"],
                 animation: .easeInOut,
                 inactiveAccentColor: .primary
             )
             
             Group {
-                switch viewModel.tabIndex {
+                switch mainViewModel.tabIndex {
                 case 0:
                     LibraryView()
+                        .environmentObject(mainViewModel)
+                        .environmentObject(playerViewModel)
                 case 1:
-                    if let selectedSong = viewModel.selectedSong {
+                    if let selectedSong = mainViewModel.selectedSong {
                         SongView(song: selectedSong)
+                            .environmentObject(mainViewModel)
+                            .environmentObject(playerViewModel)
                     } else {
                         Text("Select a song!")
                             .frame(maxHeight: .infinity)
@@ -42,14 +47,9 @@ struct MainView: View {
             }
             Spacer()
             PlayerView()
-                .environmentObject(viewModel)
+                .environmentObject(mainViewModel)
+                .environmentObject(playerViewModel)
         }
     }
 }
 
-#Preview {
-    let container = try! ModelContainer(for: Song.self, configurations: ModelConfiguration(isStoredInMemoryOnly: true))
-    let viewModel = MainViewModel(modelContext: container.mainContext)
-    return MainView()
-        .environmentObject(viewModel)
-}

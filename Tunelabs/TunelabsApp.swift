@@ -12,14 +12,17 @@ import SwiftData
 struct HelperRootView: View {
     @Environment(\.modelContext) private var modelContext
     @StateObject private var mainViewModel: MainViewModel
+    @StateObject private var playerViewModel: PlayerViewModel
     
     init(modelContext: ModelContext) {
         _mainViewModel = StateObject(wrappedValue: MainViewModel(modelContext: modelContext))
+        _playerViewModel = StateObject(wrappedValue: PlayerViewModel())
     }
     
     var body: some View {
         MainView()
             .environmentObject(mainViewModel)
+            .environmentObject(playerViewModel)
     }
 }
 
@@ -38,7 +41,7 @@ struct TunelabsApp: App {
         do {
             // Configure container with persistence
             sharedModelContainer = try ModelContainer(
-                for: Song.self,
+                for: schema,
                 configurations: modelConfiguration
             )
             
@@ -68,7 +71,7 @@ struct TunelabsApp: App {
         let instructionsURL = docsDir.appendingPathComponent("Instructions.txt")
         
         if !FileManager.default.fileExists(atPath: instructionsURL.path) {
-            let content = "Put your tunes in this folder, it will appear in the music library"
+            let content = "Copy your tunes into this folder, they will appear in the music library"
             
             do {
                 try content.write(to: instructionsURL, atomically: true, encoding: .utf8)

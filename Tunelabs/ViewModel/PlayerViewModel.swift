@@ -212,12 +212,18 @@ class PlayerViewModel: ObservableObject {
         if let nodeTime = playerNode.lastRenderTime,
            let playerTime = playerNode.playerTime(forNodeTime: nodeTime) {
             let sampleRate = file.processingFormat.sampleRate
-            currentTime = Double(playerTime.sampleTime) / sampleRate
+            let newTime = Double(playerTime.sampleTime) / sampleRate
+            
+            DispatchQueue.main.async {
+                self.currentTime = newTime
+            }
         }
         
         // Check if playback has stopped
         if !playerNode.isPlaying {
-            isPlaying = false
+            DispatchQueue.main.async {
+                self.isPlaying = false
+            }
             timer?.cancel()
         }
     }

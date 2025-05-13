@@ -11,6 +11,10 @@ import SwiftData
 
 struct PlayerView: View {
     @EnvironmentObject private var mainViewModel: MainViewModel
+    @EnvironmentObject private var playerViewModel: PlayerViewModel
+    @Environment(\.modelContext) private var modelContext
+    @Environment(\.dismiss) private var dismiss
+    @Query private var songs: [Song]
     
     var body: some View {
         VStack {
@@ -37,16 +41,18 @@ struct PlayerView: View {
                 }
                 
                 Slider(value: Binding(
-                    get: { mainViewModel.playerViewModel.currentTime },
-                    set: { mainViewModel.playerViewModel.audioTime(to: $0) }
-                ), in: 0...max(mainViewModel.playerViewModel.totalTime, 0.1))
+                    get: { playerViewModel.currentTime },
+                    set: { playerViewModel.audioTime(to: $0) }
+                ), in: 0...max(playerViewModel.totalTime, 0.1))
                 .padding([.trailing, .leading], 20)
+                .id("\(playerViewModel.currentTime)")
                 
                 HStack {
-                    Text(mainViewModel.playerViewModel.timeString(time: mainViewModel.playerViewModel.currentTime))
+                    Text(playerViewModel.timeString(time: playerViewModel.currentTime))
                         .frame(minWidth: 32)
                     Spacer()
                     Spacer()
+                    
                     // Previous button
                     Button {
                         mainViewModel.previousSong()
@@ -62,18 +68,37 @@ struct PlayerView: View {
                     
                     // Play/Pause button
                     Button {
-                        DispatchQueue.main.async {
-                            mainViewModel.playerViewModel.isPlaying ? mainViewModel.playerViewModel.stopAudio() : mainViewModel.playerViewModel.playAudio()
+                        print("Play/pause")
+                        withAnimation {
+                            playerViewModel.isPlaying.toggle()
+                            playerViewModel.isPlaying
+                                ? playerViewModel.playAudio()
+                                : playerViewModel.stopAudio()
                         }
                     } label: {
-                        Image(systemName: mainViewModel.playerViewModel.isPlaying ? "pause.fill" : "play.fill")
-                            .resizable()
-                            .frame(width: 48, height: 48, alignment: .center)
-                    }
-                    .onReceive(mainViewModel.playerViewModel.$isPlaying) { _ in
-                        DispatchQueue.main.async {}
+                        ZStack {
+                            Image(systemName: "pause.fill")
+                                .resizable()
+                                .frame(width: 48, height: 48, alignment: .center)
+                                .scaleEffect(playerViewModel.isPlaying ? 1 : 0)
+                                .opacity(playerViewModel.isPlaying ? 1 : 0)
+                                .animation(.easeInOut, value: playerViewModel.isPlaying)
+                            
+                            Image(systemName: "play.fill")
+                                .resizable()
+                                .frame(width: 48, height: 48, alignment: .center)
+                                .scaleEffect(playerViewModel.isPlaying ? 0 : 1)
+                                .opacity(playerViewModel.isPlaying ? 0 : 1)
+                                .animation(.easeInOut, value: playerViewModel.isPlaying)
+                        }
                     }
                     .disabled(mainViewModel.selectedSong == nil)
+                    .onReceive(playerViewModel.$isPlaying) { _ in
+                        
+                    }
+                    // Add an additional listener for time updates
+                    .id(playerViewModel.isPlaying) // Force view refresh when playing state changes
+                   
                     
                     Spacer()
                     
@@ -89,7 +114,8 @@ struct PlayerView: View {
                     .padding(.horizontal, 10)
                     Spacer()
                     Spacer()
-                    Text(mainViewModel.playerViewModel.timeString(time: mainViewModel.playerViewModel.totalTime))
+                    
+                    Text(playerViewModel.timeString(time: playerViewModel.totalTime))
                         .frame(minWidth: 32)
                 }
                 .font(.caption)
@@ -98,7 +124,7 @@ struct PlayerView: View {
             }
         }
         .onChange(of: mainViewModel.selectedSong) { _, newSong in
-            mainViewModel.playerViewModel.handleNewFile(newSong?.fileURL)
+            playerViewModel.handleNewFile(newSong?.fileURL)
         }
     }
 }

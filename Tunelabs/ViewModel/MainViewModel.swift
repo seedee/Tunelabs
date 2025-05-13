@@ -11,8 +11,9 @@ import Combine
 
 @MainActor
 class MainViewModel: ObservableObject {
-
-    @Environment(\.modelContext) private var modelContext
+    
+    @EnvironmentObject private var playerViewModel: PlayerViewModel
+    private var modelContext: ModelContext
     @Query private var songs: [Song]
     @Published var selectedSong: Song?
     @Published var tabIndex: Int = 0
@@ -21,10 +22,9 @@ class MainViewModel: ObservableObject {
     let allowedExtensions = ["mp3", "wav", "m4a", "aiff", "aif"]
     // Need to test wav, aiff, aif
     
-    // Make playerViewModel accessible
-    @Published var playerViewModel = PlayerViewModel()
-    
     init(modelContext: ModelContext) {
+        self.modelContext = modelContext
+        
         Task {
             await performInitialScan()
             startDirectoryWatcher()
@@ -48,10 +48,6 @@ class MainViewModel: ObservableObject {
     
     func rollbackContext() {
         modelContext.rollback()
-    }
-    
-    func findSongByPath(_ path: String) -> Song? {
-        return songs.first { $0.fileURL.path == path }
     }
     
     private func startDirectoryWatcher() {
@@ -159,7 +155,7 @@ class MainViewModel: ObservableObject {
     func nextSong() {
         guard !songs.isEmpty else { return }
         
-        if let currentSong = selectedSong, let currentIndex = songs.firstIndex(where: { $0.id == currentSong.id }) {
+        if let currentSong = selectedSong, let currentIndex = songs.firstIndex(where: { $0.uuid == currentSong.uuid }) {
             let nextIndex = (currentIndex + 1) % songs.count
             selectedSong = songs[nextIndex]
         } else {
@@ -170,11 +166,32 @@ class MainViewModel: ObservableObject {
     func previousSong() {
         guard !songs.isEmpty else { return }
         
-        if let currentSong = selectedSong, let currentIndex = songs.firstIndex(where: { $0.id == currentSong.id }) {
+        if let currentSong = selectedSong, let currentIndex = songs.firstIndex(where: { $0.uuid == currentSong.uuid }) {
             let previousIndex = (currentIndex - 1 + songs.count) % songs.count
             selectedSong = songs[previousIndex]
         } else {
             selectedSong = songs.first
+        }
+    }
+    
+    func findSongByURL(_ url: URL, _ path: String) -> Song? {
+        
+        // Create a fetch descriptor with a predicate specifically for the path
+        let descriptor = FetchDescriptor<Song>(
+            predicate: #Predicate<Song> { song in
+                song.fileURL == url
+            }
+        )
+        do {
+            // Execute a direct fetch against the model context
+            let results = try modelContext.fetch(descriptor)
+            
+            print("findSongByUrl: \(results.first?.getURLString())")
+            return results.first
+            
+        } catch {
+            print("findSongByUrl Error fetching by URL, attempting fallback path: \(error)")
+            return songs.first { $0.fileURL.path == path } // Fallback
         }
     }
 }

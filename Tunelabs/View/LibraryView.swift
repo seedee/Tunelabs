@@ -48,6 +48,8 @@ struct LibraryView: View {
                         
                         Spacer()
                     }
+                    .frame(maxWidth: .infinity)
+                    .contentShape(Rectangle())
                     .onTapGesture {
                     mainViewModel.selectedSong = song
                     }
