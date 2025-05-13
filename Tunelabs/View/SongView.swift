@@ -110,7 +110,7 @@ struct SongView: View {
                 Spacer()
                 Text(String(format: "%.2fx", localSpeed))
             }
-            Slider(value: $localSpeed, in: 0.5...2.0, step: 0.1)
+            Slider(value: $localSpeed, in: 0.0...2.0, step: 0.1)
                 .onChange(of: localSpeed) { _, newValue in
                     playerViewModel.speed = newValue
                 }
