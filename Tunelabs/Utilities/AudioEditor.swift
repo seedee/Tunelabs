@@ -93,7 +93,7 @@ class AudioEditor {
             }
             
             // Create unique output filename
-            let outputURL = FileManager.default.temporaryDirectory
+            var outputURL = FileManager.default.temporaryDirectory
                 .appendingPathComponent(UUID().uuidString)
                 .appendingPathExtension(url.pathExtension)
             
@@ -123,17 +123,42 @@ class AudioEditor {
                 throw AudioEditingError.processingError("Could not configure audio engine: \(error.localizedDescription)")
             }
             
-            // Create output file with matching settings
+            // Create output file with explicit settings instead of reusing input format settings
             let outputFile: AVAudioFile
             do {
+                // Define explicit output settings to ensure compatibility
+                var outputSettings: [String: Any] = [
+                    AVFormatIDKey: kAudioFormatLinearPCM,
+                    AVSampleRateKey: inputFormat.sampleRate,
+                    AVNumberOfChannelsKey: inputFormat.channelCount,
+                    AVLinearPCMBitDepthKey: 32,
+                    AVLinearPCMIsFloatKey: true,
+                    AVLinearPCMIsNonInterleaved: true
+                ]
+                
+                // For MP3 files, convert to a more compatible format
+                if url.pathExtension.lowercased() == "mp3" {
+                    outputSettings = [
+                        AVFormatIDKey: kAudioFormatMPEG4AAC,
+                        AVSampleRateKey: inputFormat.sampleRate,
+                        AVNumberOfChannelsKey: inputFormat.channelCount,
+                        AVEncoderBitRateKey: 256000
+                    ]
+                    
+                    // Change output extension to m4a for MPEG4 AAC
+                    outputURL = outputURL.deletingPathExtension().appendingPathExtension("m4a")
+                }
+                
                 outputFile = try AVAudioFile(
                     forWriting: outputURL,
-                    settings: inputFormat.settings,
+                    settings: outputSettings,
                     commonFormat: .pcmFormatFloat32,
                     interleaved: false
                 )
             } catch {
                 print("Failed to create output file: \(error)")
+                print("Output URL: \(outputURL)")
+                print("Format settings attempted: \(inputFormat.settings)")
                 throw AudioEditingError.exportError
             }
             

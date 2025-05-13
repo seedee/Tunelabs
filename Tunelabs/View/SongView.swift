@@ -8,6 +8,17 @@
 import SwiftUI
 import SwiftData
 
+enum StorageError: Error, LocalizedError {
+    case insufficientSpace
+    
+    var errorDescription: String? {
+        switch self {
+        case .insufficientSpace:
+            return "Not enough storage space available"
+        }
+    }
+}
+
 private struct EditableSong {
     var title: String?
     var artist: String?
@@ -17,9 +28,11 @@ private struct EditableSong {
 struct SongView: View {
     
     @EnvironmentObject private var mainViewModel: MainViewModel
-    @State private var showMetadataEditor = false
-    
+    @Environment(\.modelContext) private var modelContext
     @Environment(\.dismiss) private var dismiss
+    @Query private var songs: [Song]
+    
+    @State private var showMetadataView = false
     @State private var editableSong: EditableSong
     @State private var showConfirmDialog = false
     @State private var showingAlert = false
@@ -48,8 +61,10 @@ struct SongView: View {
         VStack {
             HStack {
                 Spacer()
-                Button("Edit Metadata", systemImage: "pencil") {
-                    showMetadataEditor = true
+                Button {
+                    showMetadataView = true
+                } label: {
+                    Label("Metadata", systemImage: "pencil")
                 }
                 Spacer()
             }
@@ -60,12 +75,13 @@ struct SongView: View {
                 .padding(.all)
             Spacer()
         }
-        .sheet(isPresented: $showMetadataEditor) {
+        .sheet(isPresented: $showMetadataView) {
             if let song = mainViewModel.selectedSong {
-                EditMetadataView(song: song)
+                MetadataView(song: song)
                     .environmentObject(mainViewModel)
             }
         }
+        
         VStack(alignment: .leading) {
             HStack {
                 Text("Pitch")
@@ -83,9 +99,8 @@ struct SongView: View {
             mainViewModel.playerViewModel.beginEditingSession()
             localPitch = mainViewModel.playerViewModel.pitch
             localSpeed = mainViewModel.playerViewModel.speed
-            print("Edit view appeared, pitch: \(localPitch), speed: \(localSpeed)")
+            print("SongView: localPitch: \(localPitch), localSpeed: \(localSpeed)")
         }
-        
         VStack(alignment: .leading) {
             HStack {
                 Text("Speed")
@@ -103,22 +118,114 @@ struct SongView: View {
         
         HStack {
             Spacer()
-            Button("Reset") {
-                localPitch = 0
-                localSpeed = 1
-                mainViewModel.playerViewModel.pitch = 0
-                mainViewModel.playerViewModel.speed = 1
+            Button(action: resetSliders) {
+                Label("Reset", systemImage: "pencil")
             }
             Spacer()
-            Button("Save As") {
-                print("Saved with pitch: \(mainViewModel.playerViewModel.pitch), speed: \(mainViewModel.playerViewModel.speed))")
+            Button(action: saveNew) {
+                Label("Save New", systemImage: "pencil")
             }
             Spacer()
         }
-        Text("Changes will be applied in real-time. \"Save As\" creates a new audio file with the effects applied.")
+        .alert(isPresented: $showingAlert) {
+            Alert(
+                title: Text(alertTitle),
+                message: Text(alertMessage),
+                dismissButton: .default(Text("OK"))
+            )
+        }
+
+
+        Text("Changes will be applied in real-time")
             .font(.caption)
             .foregroundStyle(.secondary)
             .padding()
+    }
+    
+    private func resetSliders() {
+        localPitch = 0
+        localSpeed = 1
+        mainViewModel.playerViewModel.pitch = 0
+        mainViewModel.playerViewModel.speed = 1
+    }
+    
+    private func saveNew() {
+        print("Saving pitch: \(mainViewModel.playerViewModel.pitch), speed: \(mainViewModel.playerViewModel.speed)")
+
+        let currentTime = mainViewModel.playerViewModel.currentTime
+        let wasPlaying = mainViewModel.playerViewModel.isPlaying
+        
+        // Save audio with current effects
+        Task {
+            do {
+                // Display processing indicator
+                await MainActor.run {
+                    alertTitle = ""
+                    alertMessage = "Processing with pitch: \(Int(localPitch)), speed: \(String(format: "%.1fx", localSpeed))"
+                    showingAlert = true
+                }
+                // Create a new audio editor for file processing
+                let audioEditor = AudioEditor()
+                
+                // Process audio with current effect values
+                let processedURL = try await audioEditor.processAudio(
+                    url: song.fileURL,
+                    pitch: localPitch,
+                    speed: localSpeed
+                )
+                
+                // Generate unique filename
+                let timestamp = Int(Date().timeIntervalSince1970)
+                let newFilename = "\(song.fileURL.deletingPathExtension().lastPathComponent)_p\(Int(localPitch))_s\(Int(localSpeed * 100))_\(timestamp)"
+                
+                // Check if we need to change the extension for MP3 files
+                let fileExtension = song.fileURL.pathExtension.lowercased() == "mp3" ? "m4a" : song.fileURL.pathExtension
+                let targetURL = song.fileURL.deletingLastPathComponent()
+                    .appendingPathComponent(newFilename)
+                    .appendingPathExtension(fileExtension)
+                
+                // Move processed file to target location
+                let fileManager = FileManager.default
+                
+                if fileManager.fileExists(atPath: targetURL.path) {
+                    try fileManager.removeItem(at: targetURL)
+                }
+                try fileManager.moveItem(at: processedURL, to: targetURL)
+                
+                await MainActor.run {
+                    // Force the model context to save and wait for it
+                    do {
+                        mainViewModel.saveContext()
+                    } catch {
+                        print("Error saving context: \(error)")
+                    }
+                }
+
+
+                await mainViewModel.processFiles()
+                try? await Task.sleep(nanoseconds: 500_000_000)
+                let newSong = mainViewModel.findSongByPath(targetURL.path)
+                
+                if let newSong = newSong {
+                    print("Found new song: \(newSong.fileURL.lastPathComponent)")
+                    mainViewModel.playerViewModel.stopAudio()
+                    // Update the viewModel
+                    mainViewModel.selectedSong = mainViewModel.findSongByPath(newSong.fileURL.path)
+                    resetSliders()
+                    mainViewModel.playerViewModel.handleNewFile(newSong.fileURL)
+                    mainViewModel.playerViewModel.playAudio()
+                } else {
+                    print("ERROR: Failed to find song after multiple attempts. Database may be inconsistent.")
+                    
+                    // Since we're removing the fallback, we should at least show an error
+                    await MainActor.run {
+                        alertTitle = "Warning"
+                        alertMessage = "The file was created but could not be added to your library. Please restart the app."
+                        showingAlert = true
+                    }
+                }
+            }
+        }
     }
     
     private func saveProcessedAudio() {

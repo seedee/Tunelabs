@@ -11,7 +11,6 @@ import SwiftData
 
 struct PlayerView: View {
     @EnvironmentObject private var mainViewModel: MainViewModel
-    @StateObject private var viewModel = PlayerViewModel()
     
     var body: some View {
         VStack {
@@ -38,49 +37,59 @@ struct PlayerView: View {
                 }
                 
                 Slider(value: Binding(
-                    get: { viewModel.currentTime },
-                    set: { viewModel.audioTime(to: $0) }
-                ), in: 0...max(viewModel.totalTime, 0.1))
+                    get: { mainViewModel.playerViewModel.currentTime },
+                    set: { mainViewModel.playerViewModel.audioTime(to: $0) }
+                ), in: 0...max(mainViewModel.playerViewModel.totalTime, 0.1))
                 .padding([.trailing, .leading], 20)
                 
                 HStack {
-                    Text(viewModel.timeString(time: viewModel.currentTime))
+                    Text(mainViewModel.playerViewModel.timeString(time: mainViewModel.playerViewModel.currentTime))
                         .frame(minWidth: 32)
                     Spacer()
-                    
+                    Spacer()
                     // Previous button
                     Button {
                         mainViewModel.previousSong()
                     } label: {
                         Image(systemName: "backward.fill")
-                            .font(.title3)
+                            .resizable()
+                            .frame(width: 36, height: 24, alignment: .leading)
                     }
                     .disabled(mainViewModel.selectedSong == nil)
                     .padding(.horizontal, 10)
                     
+                    Spacer()
+                    
                     // Play/Pause button
                     Button {
-                        viewModel.isPlaying ? viewModel.stopAudio() : viewModel.playAudio()
+                        DispatchQueue.main.async {
+                            mainViewModel.playerViewModel.isPlaying ? mainViewModel.playerViewModel.stopAudio() : mainViewModel.playerViewModel.playAudio()
+                        }
                     } label: {
-                        Image(systemName: viewModel.isPlaying ? "pause.fill" : "play.fill")
+                        Image(systemName: mainViewModel.playerViewModel.isPlaying ? "pause.fill" : "play.fill")
                             .resizable()
-                            .aspectRatio(contentMode: .fit)
-                            .frame(width: 32, height: 32)
+                            .frame(width: 48, height: 48, alignment: .center)
+                    }
+                    .onReceive(mainViewModel.playerViewModel.$isPlaying) { _ in
+                        DispatchQueue.main.async {}
                     }
                     .disabled(mainViewModel.selectedSong == nil)
+                    
+                    Spacer()
                     
                     // Next button
                     Button {
                         mainViewModel.nextSong()
                     } label: {
                         Image(systemName: "forward.fill")
-                            .font(.title3)
+                            .resizable()
+                            .frame(width: 36, height: 24, alignment: .trailing)
                     }
                     .disabled(mainViewModel.selectedSong == nil)
                     .padding(.horizontal, 10)
-                    
                     Spacer()
-                    Text(viewModel.timeString(time: viewModel.totalTime))
+                    Spacer()
+                    Text(mainViewModel.playerViewModel.timeString(time: mainViewModel.playerViewModel.totalTime))
                         .frame(minWidth: 32)
                 }
                 .font(.caption)
@@ -89,7 +98,7 @@ struct PlayerView: View {
             }
         }
         .onChange(of: mainViewModel.selectedSong) { _, newSong in
-            viewModel.handleNewFile(newSong?.fileURL)
+            mainViewModel.playerViewModel.handleNewFile(newSong?.fileURL)
         }
     }
 }

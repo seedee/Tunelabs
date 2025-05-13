@@ -1,5 +1,5 @@
 //
-//  EditMetadataView.swift
+//  MetadataView.swift
 //  Tunelabs
 //
 //  Created by Daniil Lebedev on 28/04/2025.
@@ -14,7 +14,7 @@ private struct EditableSong {
     var artwork: Data?
 }
 
-struct EditMetadataView: View {
+struct MetadataView: View {
     @Environment(\.dismiss) private var dismiss
     @EnvironmentObject private var mainViewModel: MainViewModel
     @State private var editableSong: EditableSong
@@ -159,5 +159,5 @@ struct EditMetadataView: View {
 }
 
 /*#Preview {
-    EditMetadataView()
+    MetadataView()
 }*/

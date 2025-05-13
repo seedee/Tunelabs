@@ -11,26 +11,22 @@ import Combine
 
 @MainActor
 class MainViewModel: ObservableObject {
-    
+
+    @Environment(\.modelContext) private var modelContext
+    @Query private var songs: [Song]
     @Published var selectedSong: Song?
     @Published var tabIndex: Int = 0
-    @Query private var songs: [Song]
-    private let modelContext: ModelContext
     private let watcherManager = DirectoryWatcherManager()
     private var initialScanComplete = false
     let allowedExtensions = ["mp3", "wav", "m4a", "aiff", "aif"]
+    // Need to test wav, aiff, aif
     
     // Make playerViewModel accessible
     @Published var playerViewModel = PlayerViewModel()
     
     init(modelContext: ModelContext) {
-        self.modelContext = modelContext
-        
-        // Perform initial library refresh first
         Task {
             await performInitialScan()
-            
-            // Start watching for changes only after initial scan
             startDirectoryWatcher()
         }
     }
@@ -52,6 +48,10 @@ class MainViewModel: ObservableObject {
     
     func rollbackContext() {
         modelContext.rollback()
+    }
+    
+    func findSongByPath(_ path: String) -> Song? {
+        return songs.first { $0.fileURL.path == path }
     }
     
     private func startDirectoryWatcher() {

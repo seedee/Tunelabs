@@ -42,6 +42,7 @@ struct MainView: View {
             }
             Spacer()
             PlayerView()
+                .environmentObject(viewModel)
         }
     }
 }

@@ -11,7 +11,14 @@ import Combine
 
 class PlayerViewModel: ObservableObject {
     
-    @Published var isPlaying = false
+    @Published var isPlaying = false {
+        didSet {
+            // Ensure UI updates by dispatching to main thread
+            DispatchQueue.main.async {
+                self.objectWillChange.send()
+            }
+        }
+    }
     @Published var totalTime: TimeInterval = 0.0
     @Published var currentTime: TimeInterval = 0.0
     private var timer: AnyCancellable?
@@ -144,15 +151,21 @@ class PlayerViewModel: ObservableObject {
         playerNode.scheduleBuffer(buffer, at: nil, options: .interruptsAtLoop)
         playerNode.play()
         
-        isPlaying = true
+        DispatchQueue.main.async {
+            self.isPlaying = true
+        }
         startTimer()
         print("Started playback with effects - pitch: \(pitch), speed: \(speed)")
     }
     
     func stopAudio() {
         playerNode.stop()
-        isPlaying = false
+        
+        DispatchQueue.main.async {
+            self.isPlaying = false
+        }
         timer?.cancel()
+        print("Stopped playback")
     }
     
     func resetPlayer() {
@@ -163,7 +176,6 @@ class PlayerViewModel: ObservableObject {
         totalTime = 0.0
         currentTime = 0.0
         isPlaying = false
-        timer?.cancel()
     }
     
     func audioTime(to time: TimeInterval) {
@@ -185,6 +197,7 @@ class PlayerViewModel: ObservableObject {
     }
     
     private func startTimer() {
+        timer?.cancel()
         timer = Timer.publish(every: 0.1, on: .main, in: .common)
             .autoconnect()
             .sink { [weak self] _ in
